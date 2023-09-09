@@ -1,87 +1,81 @@
+const boardSizeInput = document.getElementById('board-size');
+const startButton = document.getElementById('start-button');
+const board = document.getElementById('board');
+const boardContainer = document.getElementById('board-container');
+const imageOptions = document.getElementById('image-options');
+const fullImage = document.getElementById('full-image');
+let imagePieces = [];
 
-var rows = 3;
-var columns = 3; // remember to change later to let the user set the size
+startButton.addEventListener('click', () => {
+    const size = parseInt(boardSizeInput.value);
+    const selectedImage = imageOptions.value;
+    createPuzzleBoard(size, selectedImage);
+});
 
-var currTile; // selected tile
-var otherTile; // blank tile
+function createPuzzleBoard(size, selectedImage) {
+    board.innerHTML = '';
+    board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
 
-var turns = 0;
+    const image = new Image();
+    image.src = selectedImage;
 
-//var imgOrder = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] // need to adjust according to the size
-var imgOrder = ["8", "1", "5", "2", "9", "3", "6", "8", "blank"] // also to make a function so that the order can be random and not preset
+    image.onload = () => {
+        const imageWidth = image.width;
+        const imageHeight = image.height;
 
-window.onload = function() {
-    for (let r=0; r<rows; r++) {
-        for (let c=0; c<columns; c++) {
-            
-            let tile = document.createElement("img");
-            tile.id = r.toString() + "-" + c.toString(); // tile coordinates
-            tile.src = imgOrder.shift() + ".jpg"; // pop the image from the array
-            
-            // DRAG FUNCTION
-            
-            tile.addEventListener("dragstart", dragStart); // click an image
-            tile.addEventListener("dragover", dragOver); // moving the image while clicked
-            tile.addEventListener("dragenter", dragEnter); //dragging image onto another one
-            tile.addEventListener("dragleave", dragLeave); // leaves another image
-            tile.addEventListener("drop", dragDrop); // drop the image
-            tile.addEventListener("dragend", dragEnd); // swap the two tiles
+        const cellSize = Math.min(imageWidth / size, imageHeight / size);
 
-            document.getElementById("board").append(tile);
+        const emptyCellX = size - 1;
+        const emptyCellY = size - 1;
 
+        imagePieces = [];
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                const canvas = document.createElement('canvas');
+                canvas.width = cellSize;
+                canvas.height = cellSize;
+                const ctx = canvas.getContext('2d');
+
+                if (x === emptyCellX && y === emptyCellY) {
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, cellSize, cellSize);
+                } else {
+                    ctx.drawImage(
+                        image,
+                        x * (imageWidth / size),
+                        y * (imageHeight / size),
+                        imageWidth / size,
+                        imageHeight / size,
+                        0,
+                        0,
+                        cellSize,
+                        cellSize
+                    );
+                }
+                imagePieces.push(canvas.toDataURL());
+            }
         }
-    }
+
+        shuffleArray(imagePieces); // Mezcla aleatoriamente las partes
+
+        for (let i = 0; i < size * size; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell';
+
+            const puzzleImage = new Image();
+            puzzleImage.src = imagePieces[i];
+
+            cell.appendChild(puzzleImage);
+            board.appendChild(cell);
+        }
+
+    };
 }
 
-function dragStart() {
-    currTile = this; // img tile being dragged
-}
-
-function dragOver(e) {
-    e.preventDefault();
-}
-
-function dragEnter(e) {
-    e.preventDefault();
-}
-
-function dragLeave() {
-
-}
-
-function dragDrop() {
-    otherTile = this; // img tile being dropped on
-}
-
-function dragEnd() {
-    if (!otherTile.src.includes("blank.jpg")) {
-        return;
-    }
-
-    let currCoords = currTile.id.split("-"); //ex) "0-0" -> ["0", "0"]
-    let r = parseInt(currCoords[0]);
-    let c = parseInt(currCoords[1]);
-
-    let otherCoords = otherTile.id.split("-");
-    let r2 = parseInt(otherCoords[0]);
-    let c2 = parseInt(otherCoords[1]);
-
-    let moveLeft = r == r2 && c2 == c-1;
-    let moveRight = r == r2 && c2 == c+1;
-
-    let moveUp = c == c2 && r2 == r-1;
-    let moveDown = c == c2 && r2 == r+1;
-
-    let isAdjacent = moveLeft || moveRight || moveUp || moveDown;
-
-    if (isAdjacent) {
-        let currImg = currTile.src;
-        let otherImg = otherTile.src;
-
-        currTile.src = otherImg;
-        otherTile.src = currImg;
-
-        turns += 1;
-        document.getElementById("turns").innerText = turns;
+// Función para mezclar un array aleatoriamente (shuffle)
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
 }

@@ -1,16 +1,50 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Slide Puzzle</title>
-        <link rel="stylesheet" href="puzzle.css">
-        <script src="puzzle.js"></script>
-    </head>
-
-    <body>
-        <img id="title" src="./logo.jpg">
-        <div id="board"></div>
-        <h1>Turns: <span id="turns">0</span></h1>
-    </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="puzzle.css">
+    <title>Slide Puzzle</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Puzzle</h1>
+        <Label>Seleccione el tamaño del puzzle</label>
+        <select id="board-size">
+            <option value="3">3x3</option>
+            <option value="4">4x4</option>
+            <option value="5">5x5</option>
+            <option value="6">6x6</option>
+            <option value="7">7x7</option>
+            <option value="8">8x8</option>
+            <option value="9">9x9</option>
+            <option value="10">10x10</option>
+            <option value="11">11x11</option>
+            <option value="12">12x12</option>
+            <option value="13">13x13</option>
+            <option value="14">14x14</option>
+            <option value="15">15x15</option>
+            <option value="16">16x16</option>
+            <option value="17">17x17</option>
+            <option value="18">18x18</option>
+            <option value="19">19x19</option>
+            <option value="20">20x20</option>
+        </select>
+        <label for="image-options">Selecciona la imagen:</label>
+        <select id="image-options">
+            <option value="1.jpg">Imagen 1</option>
+            <option value="2.jpg">Imagen 2</option>
+            <option value="3.jpg">Imagen 3</option>
+            <option value="4.jpg">Imagen 4</option>
+            <option value="7.jpg">Imagen 5</option>
+            <option value="10.jpg">Imagen 6</option>
+        </select>
+        <button id="start-button">Comenzar Juego</button>
+        <div id="board-container">
+            <div id="board"></div>
+        </div>
+    </div>
+    <script src="puzzle.js"></script>
+</body>
 </html>
+
