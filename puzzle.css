@@ -9,8 +9,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100vh;
+    justify-content: flex-start; /* Cambiar a "flex-start" para alinear el contenido en la parte superior */
+    height: 115vh;
+    margin-top: 20px; /* Agregar un margen superior */
 }
 
 h1 {
@@ -18,16 +19,9 @@ h1 {
 }
 
 #board-container {
-    margin-top: 20px;
-    padding: 20px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    max-width: 80%; /* Ancho máximo del contenedor */
-    max-height: 80vh; /* Altura máxima del contenedor */
-    overflow: hidden; /* Oculta contenido que se desborda */
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden; /* Oculta el contenido que se desborda */
 }
 
 #image-container {
@@ -35,6 +29,7 @@ h1 {
     max-height: 100%;
     overflow: hidden; /* Oculta el contenido de la imagen que se desborda */
 }
+
 
 #puzzle-image {
     max-width: 100%;
