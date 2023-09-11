@@ -7,7 +7,7 @@ let imagePieces = [];
 startButton.addEventListener('click', () => {
     const size = parseInt(boardSizeInput.value);
     const selectedImage = imageOptions.value;
-    createPuzzleBoard(size, selectedImdage);
+    createPuzzleBoard(size, selectedImage);
 });
 
 const emptyCell = {
@@ -30,8 +30,8 @@ function createPuzzleBoard(size, selectedImage) {
         const imageHeight = image.height;
 
         // Genera una posición aleatoria para el espacio en blanco
-        const emptyCellX = Math.floor(Math.random() * size);
-        const emptyCellY = Math.floor(Math.random() * size);
+        emptyCell.x = Math.floor(Math.random() * size);
+        emptyCell.y = Math.floor(Math.random() * size);
 
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
@@ -40,10 +40,10 @@ function createPuzzleBoard(size, selectedImage) {
                 cell.style.width = `${imageWidth / size}px`;
                 cell.style.height = `${imageHeight / size}px`;
 
-                emptyCell.x = Math.floor(Math.random() * size);
-                emptyCell.y = Math.floor(Math.random() * size);
+                const offsetX = (imageWidth / size) * x;
+                const offsetY = (imageHeight / size) * y;
 
-                if (x === emptyCellX && y === emptyCellY) {
+                if (x === emptyCell.x && y === emptyCell.y) {
                     // Crea un espacio vacío en la posición aleatoria
                     cell.style.backgroundColor = 'transparent';
                 } else {
