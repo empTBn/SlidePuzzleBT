@@ -4,6 +4,9 @@ const board = document.getElementById('board');
 const imageOptions = document.getElementById('image-options');
 let imagePieces = [];
 
+let imageWidth;
+let imageHeight;
+
 startButton.addEventListener('click', () => {
     const size = parseInt(boardSizeInput.value);
     const selectedImage = imageOptions.value;
@@ -79,7 +82,7 @@ function movePiece(cell, size) {
     console.log(cellInfo)
 
     if ((Math.abs(cellInfo.x - emptyCellX) === 1 && cellInfo.y === emptyCellY) ||
-        (Math.abs(cellInfo.y - emptyCellY) === 1 && cellInfo.X === emptyCellX)) {
+        (Math.abs(cellInfo.y - emptyCellY) === 1 && cellInfo.x === emptyCellX)) {
         // Intercambia la posición de la celda clicada y la celda vacía
         const offsetX = (imageWidth / size) * emptyCellX;
         const offsetY = (imageHeight / size) * emptyCellY;
