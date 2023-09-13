@@ -7,19 +7,21 @@ let imagePieces = [];
 let imageWidth;
 let imageHeight;
 
+let emptyCell = {
+    x: 0,
+    y: 0,
+    newPositionX: 0,
+    newPositionY: 0
+};
+
+let cellsList = [];
+let currentCellPositions = []; // Variable para guardar las posiciones actuales de las celdas
+
 startButton.addEventListener('click', () => {
     const size = parseInt(boardSizeInput.value);
     const selectedImage = imageOptions.value;
     createPuzzleBoard(size, selectedImage);
 });
-
-const emptyCell = {
-    cell:{},
-    x:0,
-    y:0
-}
-
-const cellsList = []
 
 function createPuzzleBoard(size, selectedImage) {
     board.innerHTML = '';
@@ -29,12 +31,20 @@ function createPuzzleBoard(size, selectedImage) {
     image.src = selectedImage;
 
     image.onload = () => {
-        const imageWidth = image.width;
-        const imageHeight = image.height;
+        imageWidth = image.width;
+        imageHeight = image.height;
 
-        // Genera una posición aleatoria para el espacio en blanco
-        emptyCell.x = Math.floor(Math.random() * size);
-        emptyCell.y = Math.floor(Math.random() * size);
+        cellsList = [];
+        currentCellPositions = []; // Limpiar las posiciones actuales antes de crear el nuevo rompecabezas
+
+        const emptyX = Math.floor(Math.random() * size); // Posición X aleatoria para la casilla vacía
+        const emptyY = Math.floor(Math.random() * size); // Posición Y aleatoria para la casilla vacía
+
+        const canMove = (x, y) => {
+            const dx = Math.abs(x - emptyX);
+            const dy = Math.abs(y - emptyY);
+            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+        };
 
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
@@ -42,83 +52,127 @@ function createPuzzleBoard(size, selectedImage) {
                 cell.className = 'grid-cell';
                 cell.style.width = `${imageWidth / size}px`;
                 cell.style.height = `${imageHeight / size}px`;
-
+                cell.dataset.x = x;
+                cell.dataset.y = y;
                 const offsetX = (imageWidth / size) * x;
                 const offsetY = (imageHeight / size) * y;
 
-                if (x === emptyCell.x && y === emptyCell.y) {
-                    // Crea un espacio vacío en la posición aleatoria
-                    cell.style.backgroundColor = 'transparent';
+                if (x === emptyX && y === emptyY) {
+                    // Casilla vacía
+                    cell.style.backgroundColor = 'rgb(128, 128, 128)';
+                    emptyCell.cell = cell;
+                    emptyCell.x = x;
+                    emptyCell.y = y;
+                    emptyCell.newPositionX = x;
+                    emptyCell.newPositionY = y;
+                    console.log(emptyCell.cell);
                 } else {
                     cell.style.backgroundImage = `url(${selectedImage})`;
                     cell.style.backgroundSize = `${imageWidth}px ${imageHeight}px`;
                     cell.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
-                    cell.addEventListener('click', () => movePiece(cell, size));
+                    cell.addEventListener('click', () => { movePiece(cell, size); });
+                    console.log(cell);
                 }
-                cellsList.push({cell, x, y})
-
+                cell.dataset.newPositionX = x;
+                cell.dataset.newPositionY = y;
+                cellsList.push(cell);
+                currentCellPositions.push({ x, y }); // Guardar la posición actual de la celda
                 board.appendChild(cell);
             }
         }
+        shuffleArray(cellsList, size); // Reorganizar las celdas aleatoriamente
 
-        // Llama a la función shuffleArray para mezclar las celdas aleatoriamente
-        shuffleArray(Array.from(board.querySelectorAll('.grid-cell')));
+        cellsList.forEach((cell, index) => {
+            const newPosition = currentCellPositions[index]; // Obtener la nueva posición de la celda
+            const x = newPosition.x;
+            const y = newPosition.y;
+            cell.dataset.x = x;
+            cell.dataset.y = y;
+            cell.style.backgroundPosition = `-${(imageWidth / size) * x}px -${(imageHeight / size) * y}px`;
+        });
     };
 }
 
 function movePiece(cell, size) {
-    const emptyCellX = emptyCell.x;
-    const emptyCellY = emptyCell.y;
+    console.log(cell);
+    const cellX = parseInt(cell.dataset.newPositionX);
+    const cellY = parseInt(cell.dataset.newPositionY);
+    console.log('nueva', cellX, cellY);
+    const emptyX = emptyCell.newPositionX;
+    const emptyY = emptyCell.newPositionY;
+    console.log('vacia', emptyX, emptyY);
 
+    // Calcular la diferencia en las coordenadas X e Y entre la celda y la casilla vacía
+    const dx = Math.abs(cellX - emptyX);
+    const dy = Math.abs(cellY - emptyY);
+    console.log(dx, dy);
 
-    let cellInfo = {}
+    // Verificar si la celda se encuentra adyacente a la casilla vacía
+    if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+        // Intercambiar las posiciones de la celda y la casilla vacía en el dataset
+        cell.dataset.newPositionX = emptyX;
+        cell.dataset.newPositionY = emptyY;
+        emptyCell.x = cellX;
+        emptyCell.y = cellY;
 
-    for(let i = 0; i < cellsList.length; i++){
-        if(cellsList[i].cell == cell){
-            cellInfo = cellsList[i]
+        //ESTA PARTE ESTA MAL, HAY QUE SOLUCIONARLA, LAS IMAGENES NO SE CAMBIAN CORRECTAMENTE 
+        // Intercambiar la imagen de fondo de la celda y la casilla vacía
+        emptyCell.cell.style.backgroundColor = 'transparent';
+        emptyCell.cell.style.backgroundImage = cell.style.backgroundImage;
+        emptyCell.cell.style.backgroundPosition = cell.style.backgroundPosition;
+        emptyCell.cell.style.backgroundSize = cell.style.backgroundSize;
+        cell.style.backgroundImage = '';
+        cell.style.backgroundColor = emptyCell.cell.style.backgroundColor;
+
+        // Actualizar la posición de las casillas
+        emptyCell.newPositionX = cellX;
+        emptyCell.newPositionY = cellY;
+        cell.newPositionX = emptyX;
+        cell.newPositionY = emptyY;
+        console.log(emptyCell.newPositionX, emptyCell.newPositionY, cell.newPositionX, cell.newPositionY);
+
+        // Verificar si todas las casillas están en sus posiciones originales
+        if (checkPuzzleCompletion(size)) {
+            // El rompecabezas está completo, puedes mostrar un mensaje o realizar alguna acción
+            console.log('¡Has completado el rompecabezas!');
         }
-    }
-
-    console.log(cellInfo)
-
-    if ((Math.abs(cellInfo.x - emptyCellX) === 1 && cellInfo.y === emptyCellY) ||
-        (Math.abs(cellInfo.y - emptyCellY) === 1 && cellInfo.x === emptyCellX)) {
-        // Intercambia la posición de la celda clicada y la celda vacía
-        const offsetX = (imageWidth / size) * emptyCellX;
-        const offsetY = (imageHeight / size) * emptyCellY;
-        
-
-        emptyCell.x = cellInfo.x
-        emptyCell.y = cellInfo.y
-        // Verifica si se ha completado el rompecabezas
-        if (isPuzzleComplete(size)) {
-            alert('¡Felicidades! Has completado el rompecabezas.');
-        }
+    } else {
+        // La celda no es adyacente a la casilla vacía, no se realiza el movimiento
+        console.log('Movimiento inválido');
     }
 }
+
 
 
 // Función para verificar si se ha completado el rompecabezas
-function isPuzzleComplete(size) {
-    const cells = board.querySelectorAll('.grid-cell');
-    let correct = true;
+function checkPuzzleCompletion(size) {
+    for (let i = 0; i < cellsList.length; i++) {
+        const cell = cellsList[i];
+        const cellX = parseInt(cell.dataset.x);
+        const cellY = parseInt(cell.dataset.y);
 
-    cells.forEach((cell, index) => {
-        const cellX = parseInt(cell.style.gridColumn);
-        const cellY = parseInt(cell.style.gridRow);
-
-        if (cellX !== (index % size) + 1 || cellY !== Math.floor(index / size) + 1) {
-            correct = false;
+        // Verificar si la celda está en su posición original
+        if (cellX !== i % size || cellY !== Math.floor(i / size)) {
+            return false; // Al menos una celda no está en su posición original
         }
-    });
+    }
 
-    return correct;
+    return true; // Todas las celdas están en sus posiciones originales
 }
 
-// Función para mezclar un array aleatoriamente (shuffle)
-function shuffleArray(array) {
+function shuffleArray(array, size) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        array[i].parentNode.insertBefore(array[j], array[i]);
+        [array[i], array[j]] = [array[j], array[i]];
+
+        // Actualizar las posiciones de las celdas en el dataset y el estilo
+        const tempX = array[i].dataset.x;
+        const tempY = array[i].dataset.y;
+        array[i].dataset.x = array[j].dataset.x;
+        array[i].dataset.y = array[j].dataset.y;
+        array[i].style.backgroundPosition = `-${(imageWidth / size) * array[j].dataset.x}px -${(imageHeight / size) * array[j].dataset.y}px`;
+        array[j].dataset.x = tempX;
+        array[j].dataset.y = tempY;
+        array[j].style.backgroundPosition = `-${(imageWidth / size) * tempX}px -${(imageHeight / size) * tempY}px`;
     }
 }
