@@ -26,7 +26,7 @@ startButton.addEventListener('click', () => {
 function createPuzzleBoard(size, selectedImage) {
     board.innerHTML = '';
     board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-
+    const newPosition = 0;
     const image = new Image();
     image.src = selectedImage;
 
@@ -39,12 +39,6 @@ function createPuzzleBoard(size, selectedImage) {
 
         const emptyX = Math.floor(Math.random() * size); // Posición X aleatoria para la casilla vacía
         const emptyY = Math.floor(Math.random() * size); // Posición Y aleatoria para la casilla vacía
-
-        const canMove = (x, y) => {
-            const dx = Math.abs(x - emptyX);
-            const dy = Math.abs(y - emptyY);
-            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
-        };
 
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
@@ -59,42 +53,35 @@ function createPuzzleBoard(size, selectedImage) {
 
                 if (x === emptyX && y === emptyY) {
                     // Casilla vacía
-                    cell.style.backgroundColor = 'rgb(128, 128, 128)';
+                    cell.style.backgroundColor = 'grey';
                     emptyCell.cell = cell;
-                    emptyCell.x = x;
-                    emptyCell.y = y;
                     emptyCell.newPositionX = x;
                     emptyCell.newPositionY = y;
+                    emptyCell.x = cell.data-x;
+                    emptyCell.y = cell.y;
+                    
+                    console.log(emptyCell);
                     console.log(emptyCell.cell);
+                    console.log(cell);
                 } else {
                     cell.style.backgroundImage = `url(${selectedImage})`;
                     cell.style.backgroundSize = `${imageWidth}px ${imageHeight}px`;
                     cell.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
-                    cell.addEventListener('click', () => { movePiece(cell, size); });
                     console.log(cell);
+                    cell.addEventListener('click', () => { movePiece(cell, size); });
                 }
                 cell.dataset.newPositionX = x;
                 cell.dataset.newPositionY = y;
                 cellsList.push(cell);
-                currentCellPositions.push({ x, y }); // Guardar la posición actual de la celda
                 board.appendChild(cell);
             }
         }
         shuffleArray(cellsList, size); // Reorganizar las celdas aleatoriamente
-
-        cellsList.forEach((cell, index) => {
-            const newPosition = currentCellPositions[index]; // Obtener la nueva posición de la celda
-            const x = newPosition.x;
-            const y = newPosition.y;
-            cell.dataset.x = x;
-            cell.dataset.y = y;
-            cell.style.backgroundPosition = `-${(imageWidth / size) * x}px -${(imageHeight / size) * y}px`;
-        });
     };
 }
 
 function movePiece(cell, size) {
-    console.log(cell);
+    console.log('presionada', cell);
     const cellX = parseInt(cell.dataset.newPositionX);
     const cellY = parseInt(cell.dataset.newPositionY);
     console.log('nueva', cellX, cellY);
@@ -105,18 +92,15 @@ function movePiece(cell, size) {
     // Calcular la diferencia en las coordenadas X e Y entre la celda y la casilla vacía
     const dx = Math.abs(cellX - emptyX);
     const dy = Math.abs(cellY - emptyY);
-    console.log(dx, dy);
 
+    const prueba = emptyCell.cell.dataset.x;
+    const prueba1 = emptyCell.cell.dataset.y;
     // Verificar si la celda se encuentra adyacente a la casilla vacía
     if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-        // Intercambiar las posiciones de la celda y la casilla vacía en el dataset
-        cell.dataset.newPositionX = emptyX;
-        cell.dataset.newPositionY = emptyY;
-        emptyCell.x = cellX;
-        emptyCell.y = cellY;
 
         //ESTA PARTE ESTA MAL, HAY QUE SOLUCIONARLA, LAS IMAGENES NO SE CAMBIAN CORRECTAMENTE 
         // Intercambiar la imagen de fondo de la celda y la casilla vacía
+        
         emptyCell.cell.style.backgroundColor = 'transparent';
         emptyCell.cell.style.backgroundImage = cell.style.backgroundImage;
         emptyCell.cell.style.backgroundPosition = cell.style.backgroundPosition;
@@ -124,22 +108,45 @@ function movePiece(cell, size) {
         cell.style.backgroundImage = '';
         cell.style.backgroundColor = emptyCell.cell.style.backgroundColor;
 
-        // Actualizar la posición de las casillas
-        emptyCell.newPositionX = cellX;
-        emptyCell.newPositionY = cellY;
-        cell.newPositionX = emptyX;
-        cell.newPositionY = emptyY;
-        console.log(emptyCell.newPositionX, emptyCell.newPositionY, cell.newPositionX, cell.newPositionY);
+        // Cambiar posiciones
+
+        emptyCell.x = cell.dataset.x;
+        emptyCell.y = cell.dataset.y;
+        emptyCell.cell.dataset.x = cell.dataset.x;
+        emptyCell.cell.dataset.y = cell.dataset.y
+
+        console.log(emptyCell.cell.dataset.x, emptyCell.cell.dataset.y);
+
+        console.log("vacia", emptyCell);
+        console.log("otra", cell);
+        cell.dataset.newPositionX = emptyCell.cell.dataset.newPositionX;
+        cell.dataset.newPositionY = emptyCell.cell.dataset.newPositionY;
+        cell.dataset.x = emptyCell.cell.dataset.x;
+        cell.dataset.y = emptyCell.cell.dataset.y;
+        emptyCell = {
+            cell: cell,
+            x: emptyCell.cell.dataset.x,
+            y: emptyCell.cell.dataset.y,
+            newPositionX: cellX,
+            newPositionY: cellY
+        };
+        emptyCell.cell.dataset.x = emptyCell.x;
+        emptyCell.cell.dataset.y = emptyCell.y;
+        emptyCell.cell.dataset.newPositionX = emptyCell.newPositionX;
+        emptyCell.cell.dataset.newPositionY = emptyCell.newPositionY;
+
+        console.log('casilla', cell);
+        console.log('vacia', emptyCell.cell);
 
         // Verificar si todas las casillas están en sus posiciones originales
         if (checkPuzzleCompletion(size)) {
             // El rompecabezas está completo, puedes mostrar un mensaje o realizar alguna acción
             console.log('¡Has completado el rompecabezas!');
         }
-    } else {
+        } else {
         // La celda no es adyacente a la casilla vacía, no se realiza el movimiento
         console.log('Movimiento inválido');
-    }
+        }
 }
 
 
