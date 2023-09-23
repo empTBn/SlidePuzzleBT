@@ -6,6 +6,7 @@ let imagePieces = [];
 
 let imageWidth;
 let imageHeight;
+var moves;
 
 let emptyCell = {
     
@@ -25,6 +26,7 @@ startButton.addEventListener('click', () => {
 });
 
 function createPuzzleBoard(size, selectedImage) {
+    moves = 0;
     board.innerHTML = '';
     board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
     const newPosition = 0;
@@ -141,10 +143,14 @@ function movePiece(cell, size) {
         console.log('casilla', cell);
         console.log('vacia', emptyCell.cell);
 
+        moves++;
+        console.log('Movimientos: ', moves);
+
         // Verificar si todas las casillas están en sus posiciones originales
         if (checkPuzzleCompletion(size)) {
             // El rompecabezas está completo, puedes mostrar un mensaje o realizar alguna acción
             console.log('¡Has completado el rompecabezas!');
+            console.log('Movimientos totales: ', moves);
         }
         } else {
         // La celda no es adyacente a la casilla vacía, no se realiza el movimiento
