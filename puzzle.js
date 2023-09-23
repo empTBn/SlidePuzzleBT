@@ -8,6 +8,7 @@ let imageWidth;
 let imageHeight;
 
 let emptyCell = {
+    
     x: 0,
     y: 0,
     newPositionX: 0,
@@ -60,15 +61,18 @@ function createPuzzleBoard(size, selectedImage) {
                     emptyCell.x = cell.data-x;
                     emptyCell.y = cell.y;
                     
+                    emptyCell.cell.addEventListener('click', () => { movePiece(cell, size); });
                     console.log(emptyCell);
                     console.log(emptyCell.cell);
                     console.log(cell);
+                    
                 } else {
                     cell.style.backgroundImage = `url(${selectedImage})`;
                     cell.style.backgroundSize = `${imageWidth}px ${imageHeight}px`;
                     cell.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
                     console.log(cell);
                     cell.addEventListener('click', () => { movePiece(cell, size); });
+                    
                 }
                 cell.dataset.newPositionX = x;
                 cell.dataset.newPositionY = y;
@@ -98,7 +102,6 @@ function movePiece(cell, size) {
     // Verificar si la celda se encuentra adyacente a la casilla vacía
     if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
 
-        //ESTA PARTE ESTA MAL, HAY QUE SOLUCIONARLA, LAS IMAGENES NO SE CAMBIAN CORRECTAMENTE 
         // Intercambiar la imagen de fondo de la celda y la casilla vacía
         
         emptyCell.cell.style.backgroundColor = 'transparent';
