@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="puzzle.css">
     <title>Slide Puzzle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Slabo+27px&display=swap" rel="stylesheet');
+     </style>
 </head>
 <body>
     <div class="container">
         <h1>Puzzle</h1>
-        <Label>Seleccione el tamaño del puzzle</label>
+        <Label id="tamañop">Seleccione el tamaño del puzzle</label>
         <select id="board-size">
             <option value="3">3x3</option>
             <option value="4">4x4</option>
@@ -30,7 +33,7 @@
             <option value="19">19x19</option>
             <option value="20">20x20</option>
         </select>
-        <label for="image-options">Selecciona la imagen:</label>
+        <label id="imagenp">Selecciona la imagen:</label>
         <select id="image-options">
             <option value="Mariposa.jpg">Mariposa</option>
             <option value="OsoPolar.jpg">Oso Polar</option>
@@ -39,7 +42,11 @@
             <option value="Alpaca.jpg">Alpaca</option>
             <option value="Paisaje.jpg">Paisaje</option>
         </select>
-        <button id="start-button">Comenzar Juego</button>
+        <div class="buttons">
+            <button id="start-button">Comenzar Juego</button>
+            <button id="solve-buttonB">Resolver con Backtracking</button>
+            <button id="solve-buttonA">Resolver con A*</button>
+        </div>
         <div id="board-container">
             <div id="board"></div>
         </div>

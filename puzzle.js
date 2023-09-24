@@ -2,7 +2,6 @@ const boardSizeInput = document.getElementById('board-size');
 const startButton = document.getElementById('start-button');
 const board = document.getElementById('board');
 const imageOptions = document.getElementById('image-options');
-let imagePieces = [];
 
 let imageWidth;
 let imageHeight;
