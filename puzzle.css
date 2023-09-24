@@ -9,8 +9,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start; /* Cambiar a "flex-start" para alinear el contenido en la parte superior */
-    height: 117vh;
-    margin-top: 15px; /* Agregar un margen superior */
+    height: 120vh;
 }
 
 h1 {
@@ -62,7 +61,14 @@ h1 {
     object-fit: contain; /* Ajusta la imagen para caber completamente en la celda */
 }
 
+#board-size, #image-options{
+    font-family: 'Slabo 27px', sans-serif;
+    font-size: 15px;
+}
+
 .buttons button{
+    font-family: 'Slabo 27px', sans-serif;
+    font-size: 15px;
     margin-top: 20px;
     display: inline-block;
     margin-right: 10px;
@@ -76,11 +82,11 @@ h1 {
     justify-content: flex-start;
 }
 
-#tamañop {
+#tamañop, #imagenp {
     margin-bottom: 5px;
+    font-size: 17px;
 }
 
 #imagenp {
     margin-top: 15px;
-    margin-bottom: 5px;
 }
