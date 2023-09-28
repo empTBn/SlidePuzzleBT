@@ -52,6 +52,7 @@ function createPuzzleBoard(size, selectedImage) {
                 cell.dataset.y = y;
                 const offsetX = (imageWidth / size) * x;
                 const offsetY = (imageHeight / size) * y;
+                
 
                 if (x === emptyX && y === emptyY) {
                     // Casilla vacía
@@ -148,6 +149,9 @@ function movePiece(cell, size) {
         // Verificar si todas las casillas están en sus posiciones originales
         if (checkPuzzleCompletion(size)) {
             // El rompecabezas está completo, puedes mostrar un mensaje o realizar alguna acción
+            emptyCell.cell.style.backgroundImage = cell.style.backgroundImage;
+            emptyCell.cell.style.backgroundPosition = cell.style.backgroundPosition;
+            emptyCell.cell.style.backgroundSize = cell.style.backgroundSize;
             console.log('¡Has completado el rompecabezas!');
             console.log('Movimientos totales: ', moves);
         }
@@ -163,11 +167,13 @@ function movePiece(cell, size) {
 function checkPuzzleCompletion(size) {
     for (let i = 0; i < cellsList.length; i++) {
         const cell = cellsList[i];
-        const cellX = parseInt(cell.dataset.x);
-        const cellY = parseInt(cell.dataset.y);
+        const cellX = parseInt(cell.dataset.newPositionX);
+        const cellY = parseInt(cell.dataset.newPositionY);
+        
 
         // Verificar si la celda está en su posición original
-        if (cellX !== i % size || cellY !== Math.floor(i / size)) {
+        if (cellX !== parseInt(cell.dataset.x) || cellY !== parseInt(cell.dataset.y)) {
+            console.log(cellX, cellY, parseInt(cell.dataset.x), parseInt(cell.dataset.y));
             return false; // Al menos una celda no está en su posición original
         }
     }
