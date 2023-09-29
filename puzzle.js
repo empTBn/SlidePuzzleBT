@@ -6,6 +6,7 @@ const imageOptions = document.getElementById('image-options');
 let imageWidth;
 let imageHeight;
 var moves;
+var success;
 
 let emptyCell = {
     
@@ -52,7 +53,6 @@ function createPuzzleBoard(size, selectedImage) {
                 cell.dataset.y = y;
                 const offsetX = (imageWidth / size) * x;
                 const offsetY = (imageHeight / size) * y;
-                
 
                 if (x === emptyX && y === emptyY) {
                     // Casilla vacía
@@ -86,54 +86,67 @@ function createPuzzleBoard(size, selectedImage) {
     };
 }
 
+function deepCopy(obj) {
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+
+    if (Array.isArray(obj)) {
+        const copyArr = [];
+        obj.forEach(item => {
+            copyArr.push(deepCopy(item));
+        });
+        return copyArr;
+    }
+
+    const copyObj = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            copyObj[key] = deepCopy(obj[key]);
+        }
+    }
+
+    return copyObj;
+}
+
 function movePiece(cell, size) {
-    console.log('presionada', cell);
-    const cellX = parseInt(cell.dataset.newPositionX);
-    const cellY = parseInt(cell.dataset.newPositionY);
-    console.log('nueva', cellX, cellY);
-    const emptyX = emptyCell.newPositionX;
-    const emptyY = emptyCell.newPositionY;
-    console.log('vacia', emptyX, emptyY);
+    const emptyCellCopyX = deepCopy(emptyCell.cell.dataset.x);
+    const emptyCellCopyY = deepCopy(emptyCell.cell.dataset.y);
+    const emptyCellCopyNX = deepCopy(emptyCell.cell.dataset.newPositionX);
+    const emptyCellCopyNY = deepCopy(emptyCell.cell.dataset.newPositionY);
+    const pp = cell;
+    const CellCopyX = deepCopy(cell.dataset.x);
+    const CellCopyY = deepCopy(cell.dataset.y);
+    const CellCopyNX = deepCopy(cell.dataset.newPositionX);
+    const CellCopyNY = deepCopy(cell.dataset.newPositionY);
 
     // Calcular la diferencia en las coordenadas X e Y entre la celda y la casilla vacía
-    const dx = Math.abs(cellX - emptyX);
-    const dy = Math.abs(cellY - emptyY);
+    const dx = Math.abs(CellCopyNX - emptyCellCopyNX);
+    const dy = Math.abs(CellCopyNY - emptyCellCopyNY);
 
-    const prueba = emptyCell.cell.dataset.x;
-    const prueba1 = emptyCell.cell.dataset.y;
     // Verificar si la celda se encuentra adyacente a la casilla vacía
     if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
 
         // Intercambiar la imagen de fondo de la celda y la casilla vacía
-        
         emptyCell.cell.style.backgroundColor = 'transparent';
         emptyCell.cell.style.backgroundImage = cell.style.backgroundImage;
         emptyCell.cell.style.backgroundPosition = cell.style.backgroundPosition;
         emptyCell.cell.style.backgroundSize = cell.style.backgroundSize;
         cell.style.backgroundImage = '';
-        cell.style.backgroundColor = emptyCell.cell.style.backgroundColor;
+        cell.style.backgroundColor = 'grey';
 
-        // Cambiar posiciones
-
-        emptyCell.x = cell.dataset.x;
-        emptyCell.y = cell.dataset.y;
-        emptyCell.cell.dataset.x = cell.dataset.x;
-        emptyCell.cell.dataset.y = cell.dataset.y
-
-        console.log(emptyCell.cell.dataset.x, emptyCell.cell.dataset.y);
-
-        console.log("vacia", emptyCell);
-        console.log("otra", cell);
-        cell.dataset.newPositionX = emptyCell.cell.dataset.newPositionX;
-        cell.dataset.newPositionY = emptyCell.cell.dataset.newPositionY;
-        cell.dataset.x = emptyCell.cell.dataset.x;
-        cell.dataset.y = emptyCell.cell.dataset.y;
+        // Cambiar posiciones en el dataset
+        cell = emptyCell.cell;
+        cell.dataset.x = CellCopyX;
+        cell.dataset.y = CellCopyY;
+        cell.dataset.newPositionX = emptyCellCopyNX;
+        cell.dataset.newPositionY = emptyCellCopyNY;
         emptyCell = {
-            cell: cell,
-            x: emptyCell.cell.dataset.x,
-            y: emptyCell.cell.dataset.y,
-            newPositionX: cellX,
-            newPositionY: cellY
+            cell: pp,
+            x: emptyCellCopyX,
+            y: emptyCellCopyY,
+            newPositionX: CellCopyNX,
+            newPositionY: CellCopyNY
         };
         emptyCell.cell.dataset.x = emptyCell.x;
         emptyCell.cell.dataset.y = emptyCell.y;
@@ -149,9 +162,6 @@ function movePiece(cell, size) {
         // Verificar si todas las casillas están en sus posiciones originales
         if (checkPuzzleCompletion(size)) {
             // El rompecabezas está completo, puedes mostrar un mensaje o realizar alguna acción
-            emptyCell.cell.style.backgroundImage = cell.style.backgroundImage;
-            emptyCell.cell.style.backgroundPosition = cell.style.backgroundPosition;
-            emptyCell.cell.style.backgroundSize = cell.style.backgroundSize;
             console.log('¡Has completado el rompecabezas!');
             console.log('Movimientos totales: ', moves);
         }
@@ -161,24 +171,28 @@ function movePiece(cell, size) {
         }
 }
 
-
-
 // Función para verificar si se ha completado el rompecabezas
 function checkPuzzleCompletion(size) {
+    success = 0;
     for (let i = 0; i < cellsList.length; i++) {
         const cell = cellsList[i];
         const cellX = parseInt(cell.dataset.newPositionX);
         const cellY = parseInt(cell.dataset.newPositionY);
-        
 
+        //console.log(i, cellX, cellY);
         // Verificar si la celda está en su posición original
-        if (cellX !== parseInt(cell.dataset.x) || cellY !== parseInt(cell.dataset.y)) {
+        if (cellX == parseInt(cell.dataset.x) && cellY == parseInt(cell.dataset.y)) {
+            
             console.log(cellX, cellY, parseInt(cell.dataset.x), parseInt(cell.dataset.y));
-            return false; // Al menos una celda no está en su posición original
+            success++;
+            if (success == size*size-1){
+                return true;
+            }
+            //return false; // Todas las celdas están en sus posiciones originales
         }
     }
 
-    return true; // Todas las celdas están en sus posiciones originales
+    return false; // Al menos una celda no está en su posición original
 }
 
 function shuffleArray(array, size) {
