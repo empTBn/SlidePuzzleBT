@@ -10,6 +10,7 @@ body {
     align-items: center;
     justify-content: flex-start; /* Cambiar a "flex-start" para alinear el contenido en la parte superior */
     height: 120vh;
+    position: relative;
 }
 
 h1 {
@@ -20,12 +21,14 @@ h1 {
     max-width: 100%;
     max-height: 100%;
     overflow: hidden; /* Oculta el contenido que se desborda */
+    position: relative;
 }
 
 #image-container {
     max-width: 100%;
     max-height: 100%;
     overflow: hidden; /* Oculta el contenido de la imagen que se desborda */
+    position: relative;
 }
 
 
@@ -34,6 +37,7 @@ h1 {
     max-height: 100%;
     width: auto;
     height: auto;
+    position: relative;
 }
 
 #board {
@@ -41,6 +45,7 @@ h1 {
     background-color: grey;
     max-width: 100%; /* Asegura que el tablero no se salga del contenedor */
     max-height: 100%; /* Asegura que el tablero no se salga del contenedor */
+    position: relative;
 }
 
 .grid-cell {
@@ -53,12 +58,14 @@ h1 {
     justify-content: center;
     align-items: center;
     overflow: hidden; /* Oculta contenido que se desborda */
+    position: relative;
 }
 
 .grid-cell img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain; /* Ajusta la imagen para caber completamente en la celda */
+    position: relative;
 }
 
 #board-size, #image-options{
@@ -80,6 +87,7 @@ h1 {
     margin-top: 10px;
     flex-direction: column;
     justify-content: flex-start;
+    position: relative;
 }
 
 #tamañop, #imagenp {
@@ -89,4 +97,20 @@ h1 {
 
 #imagenp {
     margin-top: 15px;
+}
+
+#movements{
+    position: absolute;
+    top: 50%; 
+    left: 20px;
+    width: 20%;
+    height: 15%;
+}
+
+#movements::before{
+    content: "Cantidad de movimientos realizados: ";
+}
+
+.hidden {
+    opacity: 0;
 }

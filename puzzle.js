@@ -2,6 +2,9 @@ const boardSizeInput = document.getElementById('board-size');
 const startButton = document.getElementById('start-button');
 const board = document.getElementById('board');
 const imageOptions = document.getElementById('image-options');
+const movements = document.getElementById('movements');
+const completion = document.getElementById('message');
+completion.classList.add('hidden');
 
 let imageWidth;
 let imageHeight;
@@ -22,6 +25,8 @@ let currentCellPositions = []; // Variable para guardar las posiciones actuales 
 startButton.addEventListener('click', () => {
     const size = parseInt(boardSizeInput.value);
     const selectedImage = imageOptions.value;
+    completion.classList.add('hidden');
+    movements.textContent = 0;
     createPuzzleBoard(size, selectedImage);
 });
 
@@ -157,6 +162,7 @@ function movePiece(cell, size) {
         console.log('vacia', emptyCell.cell);
 
         moves++;
+        movements.textContent = moves; // Actualiza el contenido del elemento HTML con el puntaje
         console.log('Movimientos: ', moves);
 
         // Verificar si todas las casillas están en sus posiciones originales
@@ -164,6 +170,7 @@ function movePiece(cell, size) {
             // El rompecabezas está completo, puedes mostrar un mensaje o realizar alguna acción
             console.log('¡Has completado el rompecabezas!');
             console.log('Movimientos totales: ', moves);
+            completion.classList.remove('hidden');
         }
         } else {
         // La celda no es adyacente a la casilla vacía, no se realiza el movimiento
