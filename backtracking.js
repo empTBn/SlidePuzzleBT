@@ -1,123 +1,80 @@
-function solvePuzzle(size) {
-    const initialBoard = getCurrentBoardState(size);
-    const solvedBoard = getGoalBoard(size);
+//Algoritmo backtracking
+//***********************************************************************************************
+class BackTracking {
 
-    const solve = (board, depth) => {
-        if (depth === 0) {
-            return board.toString() === solvedBoard.toString() ? [board] : [];
-        }
+   constructor( board, emptyCell ) {
+      this.updateBoardState(board)
+      this.emptyCell = emptyCell;
+   }
 
-        const emptyCell = findEmptyCell(board, size);
-        const moves = getPossibleMoves(emptyCell, size);
+   updateBoardState(newBoard){
+       this.board = newBoard;
+       this.size = Math.sqrt(this.board.length);
+   }
 
-        for (const move of moves) {
-            const newBoard = makeMove(board, emptyCell, move);
-            const solution = solve(newBoard, depth - 1);
+   verifyValidMove( cell ) {
+      const dx = Math.abs(cell.x - this.emptyCell.x)
+      const dy = Math.abs(cell.y - this.emptyCell.y)
+      return ((dx === 1 && dy === 0) || (dx === 0 && dy === 1))
+   }
 
-            if (solution.length > 0) {
-                return [board, ...solution];
-            }
-        }
+   getAllValidMoves() {
+       //Se limpia la lista
+       this.validMoves = []
+       for ( let i = 0; i < this.board.length; i++ ) {
+           if ( this.verifyValidMove(this.board[i]) ) {
+               //Se agregan las casillas que se pueden mover
+               this.validMoves.push(this.board[i])
+           }
+       }
+       console.log("Posibles movimientos:", this.validMoves)
+       return this.validMoves
+   }
 
-        return [];
-    };
+   checkPuzzleCompletion() {
+      //Se compara la posicion actual, con la posicion target
+     for (let i = 0; i < this.board.length; i++) {
+      if (!(this.board[i].x === this.board[i].target.x && this.board[i].y === this.board[i].target.y)) {
+         return false
+      }
+     }
+     return true
+   }
 
-    const solutionPath = solve(initialBoard, size * size * size);
-    
-    if (solutionPath.length === 0) {
-        console.log('No se encontró una solución.');
-    } else {
-        console.log('Se encontró una solución:');
-        for (let i = 0; i < solutionPath.length; i++) {
-            console.log(`Movimiento ${i + 1}:`);
-            printBoard(solutionPath[i], size);
-        }
-    }
+   changePosition(cell) {
+      let auxEmptyCell = this.emptyCell
+      let auxCell = cell
+      cell.x = auxEmptyCell.x
+      cell.y = auxEmptyCell.y
+      this.emptyCell.x = auxCell.x
+      this.emptyCell.y = auxCell.y
+   }
+
+   solve(validMovesLength){
+       //Encontramos una solución
+       if ( this.checkPuzzleCompletion() ) {
+           return true;
+       }
+       console.log("Reinicio")
+
+       for ( let i = 0; i < validMovesLength; i++ ) {
+           //Realiza el movimiento, con 100ms de diferencia para que se note
+           setTimeout(() => {}, 1000)
+           this.validMoves[i].cell.click()
+           this.changePosition(this.validMoves[i])
+           //Calcula los movimientos posibles luego de que se cambie la posicion
+           let validMoves = this.getAllValidMoves()
+
+           //Llama recursivamente con el nuevo estado, en caso de estar resuelto, nos retornara true
+           if ( this.solve(validMoves.length) ) {
+               alert("HAZ COMPLETADO EL JUEGO")
+               return
+           }
+           //Se rehace el movimiento
+           setTimeout(this.validMoves[i].click(), 100)
+       }
+       alert("No existe solucion")
+
+   }
 }
-
-// Función para obtener el estado actual del tablero
-function getCurrentBoardState(size) {
-    const boardState = Array.from({ length: size }, () =>
-        Array.from({ length: size }, () => ({ x: 0, y: 0 }))
-    );
-
-    cellsList.forEach((cell) => {
-        const x = parseInt(cell.dataset.x);
-        const y = parseInt(cell.dataset.y);
-        boardState[x][y] = { x, y };
-    });
-
-    return boardState;
-}
-
-// Función para obtener el estado objetivo del tablero
-function getGoalBoard(size) {
-    const goalBoard = Array.from({ length: size }, () =>
-        Array.from({ length: size }, () => ({ x: 0, y: 0 }))
-    );
-
-    for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-            goalBoard[x][y] = { x, y };
-        }
-    }
-
-    return goalBoard;
-}
-
-// Función para encontrar la celda vacía en el tablero
-function findEmptyCell(board, size) {
-    for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-            if (!board[x][y]) {
-                return { x, y };
-            }
-        }
-    }
-}
-
-// Función para obtener los movimientos posibles desde una celda
-function getPossibleMoves(cell, size) {
-    const { x, y } = cell;
-    const moves = [];
-
-    if (x > 0) moves.push({ x: x - 1, y });
-    if (x < size - 1) moves.push({ x: x + 1, y });
-    if (y > 0) moves.push({ x, y: y - 1 });
-    if (y < size - 1) moves.push({ x, y: y + 1 });
-
-    return moves;
-}
-
-// Función para realizar un movimiento en el tablero
-function makeMove(board, emptyCell, move) {
-    const newBoard = board.map((row) => [...row]);
-    const { x: emptyX, y: emptyY } = emptyCell;
-    const { x: moveX, y: moveY } = move;
-
-    newBoard[emptyX][emptyY] = { ...board[moveX][moveY] };
-    newBoard[moveX][moveY] = null;
-
-    return newBoard;
-}
-
-// Función para imprimir el tablero en la consola
-function printBoard(board, size) {
-    for (let y = 0; y < size; y++) {
-        let row = '';
-        for (let x = 0; x < size; x++) {
-            const cell = board[x][y];
-            row += cell ? `[${cell.x},${cell.y}] ` : '[  ] ';
-        }
-        console.log(row);
-    }
-    console.log('\n');
-}
-
-// Llamar a la función para resolver el rompecabezas
-startButton.addEventListener('click', () => {
-    const size = parseInt(boardSizeInput.value);
-    const selectedImage = imageOptions.value;
-    createPuzzleBoard(size, selectedImage);
-    solvePuzzle(size);
-});
+//***********************************************************************************************

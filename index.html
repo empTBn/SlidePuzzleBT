@@ -12,36 +12,42 @@
 <body>
     <div class="container">
         <h1>Puzzle</h1>
-        <Label id="tamañop">Seleccione el tamaño del puzzle</label>
-        <select id="board-size">
-            <option value="3">3 x 3</option>
-            <option value="4">4 x 4</option>
-            <option value="5">5 x 5</option>
-            <option value="6">6 x 6</option>
-            <option value="7">7 x 7</option>
-            <option value="8">8 x 8</option>
-            <option value="9">9 x 9</option>
-            <option value="10">10 x 10</option>
-            <option value="11">11 x 11</option>
-            <option value="12">12 x 12</option>
-            <option value="13">13 x 13</option>
-            <option value="14">14 x 14</option>
-            <option value="15">15 x 15</option>
-            <option value="16">16 x 16</option>
-            <option value="17">17 x 17</option>
-            <option value="18">18 x 18</option>
-            <option value="19">19 x 19</option>
-            <option value="20">20 x 20</option>
-        </select>
-        <label id="imagenp">Selecciona la imagen:</label>
-        <select id="image-options">
-            <option value="Imagenes/Mariposa.jpg">Mariposa</option>
-            <option value="Imagenes/OsoPolar.jpg">Oso Polar</option>
-            <option value="Imagenes/Flores.jpg">Flores</option>
-            <option value="Imagenes/Leopardo.jpg">Leopardo</option>
-            <option value="Imagenes/Alpaca.jpg">Alpaca</option>
-            <option value="Imagenes/Paisaje.jpg">Paisaje</option>
-        </select>
+        <div class="selectOptions" >
+            <div>
+                <label id="tamañop">Seleccione el tamaño del puzzle</label>
+                <select id="board-size">
+                    <option value="3">3 x 3</option>
+                    <option value="4">4 x 4</option>
+                    <option value="5">5 x 5</option>
+                    <option value="6">6 x 6</option>
+                    <option value="7">7 x 7</option>
+                    <option value="8">8 x 8</option>
+                    <option value="9">9 x 9</option>
+                    <option value="10">10 x 10</option>
+                    <option value="11">11 x 11</option>
+                    <option value="12">12 x 12</option>
+                    <option value="13">13 x 13</option>
+                    <option value="14">14 x 14</option>
+                    <option value="15">15 x 15</option>
+                    <option value="16">16 x 16</option>
+                    <option value="17">17 x 17</option>
+                    <option value="18">18 x 18</option>
+                    <option value="19">19 x 19</option>
+                    <option value="20">20 x 20</option>
+                </select>
+            </div>
+            <div>
+                <label id="imagenp">Selecciona la imagen:</label>
+                <select id="image-options">
+                    <option value="Imagenes/Mariposa.jpg">Mariposa</option>
+                    <option value="Imagenes/OsoPolar.jpg">Oso Polar</option>
+                    <option value="Imagenes/Flores.jpg">Flores</option>
+                    <option value="Imagenes/Leopardo.jpg">Leopardo</option>
+                    <option value="Imagenes/Alpaca.jpg">Alpaca</option>
+                    <option value="Imagenes/Paisaje.jpg">Paisaje</option>
+                </select>
+            </div>
+        </div>
         <div class="buttons">
             <button id="start-button">Comenzar Juego</button>
             <button id="solve-buttonB">Resolver con Backtracking</button>
@@ -56,7 +62,7 @@
             <p>Has completado el rompecabezas, felicidades</p>
         </div>
     </div>
-    <script src="puzzle.js"></script>
+    <script type="module" src="backtracking.js"></script>
+    <script type="module" src="puzzle.js"></script>
 </body>
 </html>
-
