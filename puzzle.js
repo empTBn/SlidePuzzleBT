@@ -17,7 +17,6 @@ var moves;
 var success;
 
 let emptyCell = {
-    
     x: 0,
     y: 0,
     newPositionX: 0,
@@ -26,6 +25,9 @@ let emptyCell = {
 
 let cellsList = [];
 let currentCellPositions = []; // Variable para guardar las posiciones actuales de las celdas
+let cellObjets = []
+
+let specialCell;
 
 function createPuzzleBoard(size, selectedImage) {
     moves = 0;
@@ -66,9 +68,18 @@ function createPuzzleBoard(size, selectedImage) {
                     emptyCell.y = cell.y;
                     
                     emptyCell.cell.addEventListener('click', () => { movePiece(cell, size); });
-                    console.log(emptyCell);
-                    console.log(emptyCell.cell);
-                    console.log(cell);
+                    //Guardo el objeto casilla
+                    cellObjets.push({
+                        x:0,
+                        y:0,
+                        cell:emptyCell.cell,
+                        target:{
+                            x:emptyX,
+                            y:emptyY
+                        }
+                    })
+
+                    specialCell = cellObjets[cellObjets.length - 1]
                     
                 } else {
                     cell.style.backgroundImage = `url(${selectedImage})`;
@@ -76,6 +87,16 @@ function createPuzzleBoard(size, selectedImage) {
                     cell.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
                     console.log(cell);
                     cell.addEventListener('click', () => { movePiece(cell, size); });
+                    //Guardo el objeto casilla
+                    cellObjets.push({
+                        x:0,
+                        y:0,
+                        cell,
+                        target:{
+                            x,
+                            y
+                        }
+                    })
                     
                 }
                 cell.dataset.newPositionX = x;
@@ -186,7 +207,6 @@ function checkPuzzleCompletion(size) {
         //console.log(i, cellX, cellY);
         // Verificar si la celda está en su posición original
         if (cellX == parseInt(cell.dataset.x) && cellY == parseInt(cell.dataset.y)) {
-            
             console.log(cellX, cellY, parseInt(cell.dataset.x), parseInt(cell.dataset.y));
             success++;
             if (success == size*size-1){
@@ -203,10 +223,21 @@ function shuffleArray(array, size) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
-
-        // Actualizar las posiciones de las celdas en el dataset y el estilo
         const tempX = array[i].dataset.x;
-        const tempY = array[i].dataset.y;
+        const tempY = array[i].dataset.y; 
+
+        const tempX2 = cellObjets[i].x
+        const tempY2 = cellObjets[i].y
+
+        console.log(tempX, tempY)
+        console.log(array[j].dataset.x, array[j].dataset.y)
+
+        cellObjets[i].x = parseInt(array[j].dataset.x)
+        cellObjets[i].y = parseInt(array[j].dataset.y)
+
+        cellObjets[j].x = parseInt(tempX2)
+        cellObjets[j].y = parseInt(tempY2)
+
         array[i].dataset.x = array[j].dataset.x;
         array[i].dataset.y = array[j].dataset.y;
         array[i].style.backgroundPosition = `-${(imageWidth / size) * array[j].dataset.x}px -${(imageHeight / size) * array[j].dataset.y}px`;
@@ -214,51 +245,39 @@ function shuffleArray(array, size) {
         array[j].dataset.y = tempY;
         array[j].style.backgroundPosition = `-${(imageWidth / size) * tempX}px -${(imageHeight / size) * tempY}px`;
     }
+    
 }
 
 //Algoritmo backtracking
 //***********************************************************************************************
 class BackTracking {
 
-    constructor( board ) {
-       this.updateBoardState(board)
+    constructor( board, emptyCell ) {
+        console.log("Tableroo", board)
+        this.updateBoardState(board)
+        this.emptyCell = emptyCell;
     }
-
+ 
     updateBoardState(newBoard){
         this.board = newBoard;
-        this.size = Math.sqrt(this.board);
+        this.size = Math.sqrt(this.board.length);
+    }
+
+    changePosition(cell) {
+        let auxEmptyCell = this.emptyCell
+        let auxCell = cell
+        cell.x = auxEmptyCell.x
+        cell.y = auxEmptyCell.y
+        this.emptyCell.x = auxCell.x
+        this.emptyCell.y = auxCell.y
     }
  
     verifyValidMove( cell ) {
-        const emptyCellCopyNX = deepCopy(emptyCell.cell.dataset.newPositionX);
-        const emptyCellCopyNY = deepCopy(emptyCell.cell.dataset.newPositionY);
-        const CellCopyX = deepCopy(cell.dataset.x);
-        const CellCopyY = deepCopy(cell.dataset.y);
-        const CellCopyNX = deepCopy(cell.dataset.newPositionX);
-        const CellCopyNY = deepCopy(cell.dataset.newPositionY);
-
-        // Calcular la diferencia en las coordenadas X e Y entre la celda y la casilla vacía
-        const dx = Math.abs(CellCopyNX - emptyCellCopyNX);
-        const dy = Math.abs(CellCopyNY - emptyCellCopyNY);
-
-        // Verificar si la celda se encuentra adyacente a la casilla vacía
-        if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-            // Cambiar posiciones en el dataset
-            cell = emptyCell.cell;
-            cell.dataset.x = CellCopyX;
-            cell.dataset.y = CellCopyY;
-            cell.dataset.newPositionX = emptyCellCopyNX;
-            cell.dataset.newPositionY = emptyCellCopyNY;
-            emptyCell.cell.dataset.x = emptyCell.x;
-            emptyCell.cell.dataset.y = emptyCell.y;
-            emptyCell.cell.dataset.newPositionX = emptyCell.newPositionX;
-            emptyCell.cell.dataset.newPositionY = emptyCell.newPositionY;
-            return true
-        } else {
-            return false;
-        }
+       const dx = Math.abs(cell.x - this.emptyCell.x)
+       const dy = Math.abs(cell.y - this.emptyCell.y)
+       return ((dx === 1 && dy === 0) || (dx === 0 && dy === 1))
     }
-
+ 
     getAllValidMoves() {
         //Se limpia la lista
         this.validMoves = []
@@ -268,31 +287,19 @@ class BackTracking {
                 this.validMoves.push(this.board[i])
             }
         }
-        console.log("Posibles movimientos:", this.validMoves)
         return this.validMoves
     }
-
+ 
     checkPuzzleCompletion() {
-        success = 0;
+        //Se compara la posicion actual, con la posicion target
+        console.log("Tablero", this.board)
         for (let i = 0; i < this.board.length; i++) {
-            const cell = this.board[i];
-            const cellX = parseInt(cell.dataset.newPositionX);
-            const cellY = parseInt(cell.dataset.newPositionY);
-    
-            //console.log(i, cellX, cellY);
-            // Verificar si la celda está en su posición original
-            if (cellX == parseInt(cell.dataset.x) && cellY == parseInt(cell.dataset.y)) {
-                
-                console.log(cellX, cellY, parseInt(cell.dataset.x), parseInt(cell.dataset.y));
-                success++;
-                if (success == this.size**2 - 1){
-                    return true;
-                }
-                //return false; // Todas las celdas están en sus posiciones originales
+            if (!( (this.board[i].x === this.board[i].target.x) && (this.board[i].y === this.board[i].target.y) ) ) {
+                console.log(this.board[i])
+                return false
             }
         }
-    
-        return false; // Al menos una celda no está en su posición original
+        return true
     }
  
     solve(validMovesLength){
@@ -300,26 +307,28 @@ class BackTracking {
         if ( this.checkPuzzleCompletion() ) {
             return true;
         }
-        console.log("Reinicio")
-
+ 
         for ( let i = 0; i < validMovesLength; i++ ) {
             //Realiza el movimiento, con 100ms de diferencia para que se note
-            setTimeout(this.validMoves[i].click(), 100)
+            setTimeout(() => {}, 100)
+            this.validMoves[i].cell.click()
+            this.changePosition(this.validMoves[i])
+            //Calcula los movimientos posibles luego de que se cambie la posicion
             let validMoves = this.getAllValidMoves()
-
+ 
             //Llama recursivamente con el nuevo estado, en caso de estar resuelto, nos retornara true
             if ( this.solve(validMoves.length) ) {
                 alert("HAZ COMPLETADO EL JUEGO")
                 return
             }
             //Se rehace el movimiento
-            setTimeout(this.validMoves[i].click(), 100)
+            setTimeout(this.validMoves[i].cell.click(), 100)
         }
         alert("No existe solucion")
-
+ 
     }
-}
-//***********************************************************************************************
+ }
+ //***********************************************************************************************
 
 
 startButton.addEventListener('click', () => {
@@ -331,7 +340,7 @@ startButton.addEventListener('click', () => {
 });
 
 backTrackingButton.addEventListener('click', () => {
-    backTrackingAlgorithm = new BackTracking(cellsList)
+    backTrackingAlgorithm = new BackTracking(cellObjets, specialCell)
     //Se llama la solucion
     backTrackingAlgorithm.solve( backTrackingAlgorithm.getAllValidMoves().length )
 })
