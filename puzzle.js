@@ -1,34 +1,117 @@
-
+/**
+ * Representa el elemento HTML para la entrada del tamaño del tablero.
+ * @type {HTMLInputElement}
+ */
 const boardSizeInput = document.getElementById('board-size');
+
+/**
+ * Representa el elemento HTML para el botón de inicio.
+ * @type {HTMLButtonElement}
+ */
 const startButton = document.getElementById('start-button');
+
+/**
+ * Representa el elemento HTML para el botón de resolver con Backtracking.
+ * @type {HTMLButtonElement}
+ */
 const backTrackingButton = document.getElementById('solve-buttonB');
+
+/**
+ * Representa el elemento HTML del tablero.
+ * @type {HTMLDivElement}
+ */
 const board = document.getElementById('board');
+
+/**
+ * Representa el elemento HTML para las opciones de imagen.
+ * @type {HTMLSelectElement}
+ */
 const imageOptions = document.getElementById('image-options');
+
+/**
+ * Representa el elemento HTML para la visualización de movimientos.
+ * @type {HTMLDivElement}
+ */
 const movements = document.getElementById('movements');
+
+/**
+ * Representa el elemento HTML para el mensaje de finalización.
+ * @type {HTMLDivElement}
+ */
 const completion = document.getElementById('message');
 completion.classList.add('hidden');
 
+/**
+ * Ancho de la imagen del rompecabezas.
+ * @type {number}
+ */
 let imageWidth;
+
+/**
+ * Altura de la imagen del rompecabezas.
+ * @type {number}
+ */
 let imageHeight;
 
+/**
+ * Representa una instancia de la clase BackTracking utilizada para resolver el rompecabezas.
+ * @type {BackTracking}
+ */
 let backTrackingAlgorithm
 
+/**
+ * Número de movimientos realizados en el rompecabezas.
+ * @type {number}
+ */
 var moves;
+
+/**
+ * Bandera que indica si el rompecabezas se completó con éxito.
+ * @type {boolean}
+ */
 var success;
 
+/**
+ * Objeto que representa la celda vacía en el grid del rompecabezas.
+ * @type {{x: number, y: number, newPositionX: number, newPositionY: number, cell: HTMLElement}}
+ */
 let emptyCell = {
     x: 0,
     y: 0,
     newPositionX: 0,
-    newPositionY: 0
+    newPositionY: 0,
+    cell: null
 };
 
+/**
+ * Array para almacenar las celdas en el tablero del rompecabezas.
+ * @type {Array}
+ */
 let cellsList = [];
+
+/**
+ * Array para almacenar las posiciones actuales de las celdas en el tablero del rompecabezas.
+ * @type {Array}
+ */
 let currentCellPositions = []; // Variable para guardar las posiciones actuales de las celdas
+
+/**
+ * Array para almacenar los objetos de la celda en el tablero del rompecabezas.
+ * @type {Array}
+ */
 let cellObjets = []
 
+/**
+ * La celda especial que representa la posición inicial de la celda vacía y el elemento HTML.
+ * @type {{x: number, y: number, cell: HTMLElement, target: {x: number, y: number}}}
+ */
 let specialCell;
 
+/**
+ * Cree un tablero de rompecabezas según el tamaño especificado y la imagen seleccionada.
+ * @param {number} size - El tamaño del tablero del rompecabezas.
+ * @param {string} selectedImage - La URL de la imagen seleccionada.
+ */
 function createPuzzleBoard(size, selectedImage) {
     moves = 0;
     board.innerHTML = '';
@@ -109,6 +192,11 @@ function createPuzzleBoard(size, selectedImage) {
     };
 }
 
+/**
+ * Hace una copia profunda de un objeto.
+ * @param {Object} obj - El objeto que se va a copiar.
+ * @returns {Object} - La copia profunda del objeto.
+ */
 function deepCopy(obj) {
     if (obj === null || typeof obj !== 'object') {
         return obj;
@@ -132,6 +220,11 @@ function deepCopy(obj) {
     return copyObj;
 }
 
+/**
+ * Mueve una pieza del rompecabezas cuando el usuario hace clic en ella.
+ * @param {HTMLElement} cell - La celda que se está moviendo.
+ * @param {number} size - El tamaño del tablero del rompecabezas.
+ */
 function movePiece(cell, size) {
     const emptyCellCopyX = deepCopy(emptyCell.cell.dataset.x);
     const emptyCellCopyY = deepCopy(emptyCell.cell.dataset.y);
@@ -196,7 +289,11 @@ function movePiece(cell, size) {
         }
 }
 
-// Función para verificar si se ha completado el rompecabezas
+/**
+ * Comprueba si el rompecabezas está completo.
+ * @param {number} size - El tamaño del tablero del rompecabezas.
+ * @returns {boolean} - Verdadero si se completa el rompecabezas; falso en caso contrario.
+ */
 function checkPuzzleCompletion(size) {
     success = 0;
     for (let i = 0; i < cellsList.length; i++) {
@@ -219,6 +316,11 @@ function checkPuzzleCompletion(size) {
     return false; // Al menos una celda no está en su posición original
 }
 
+/**
+ * Mezcla el rompecabezas dado.
+ * @param {Array} array - El array que se va a mezclar.
+ * @param {number} size - El tamaño del tablero del rompecabezas..
+ */
 function shuffleArray(array, size) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -250,6 +352,10 @@ function shuffleArray(array, size) {
 
 //Algoritmo backtracking
 //***********************************************************************************************
+
+/**
+ * Clase que representa el algoritmo de backtracking para resolver el rompecabezas.
+ */
 class BackTracking {
 
     constructor( board, emptyCell ) {
@@ -330,7 +436,9 @@ class BackTracking {
  }
  //***********************************************************************************************
 
-
+/**
+ * Event Listener para el botón de inicio para crear un nuevo tablero de rompecabezas.
+ */
 startButton.addEventListener('click', () => {
     const size = parseInt(boardSizeInput.value);
     const selectedImage = imageOptions.value;
@@ -339,6 +447,10 @@ startButton.addEventListener('click', () => {
     createPuzzleBoard(size, selectedImage);
 });
 
+/**
+ * Event listener para el botón de resolución con backtracking.
+ * Llama al algoritmo de backtracking para resolver el rompecabezas.
+ */
 backTrackingButton.addEventListener('click', () => {
     backTrackingAlgorithm = new BackTracking(cellObjets, specialCell)
     //Se llama la solucion
