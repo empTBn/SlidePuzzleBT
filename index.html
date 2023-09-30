@@ -5,46 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="puzzle.css">
     <title>Slide Puzzle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Slabo+27px&display=swap" rel="stylesheet');
+     </style>
 </head>
 <body>
     <div class="container">
         <h1>Puzzle</h1>
-        <Label>Seleccione el tamaño del puzzle</label>
-        <select id="board-size">
-            <option value="3">3x3</option>
-            <option value="4">4x4</option>
-            <option value="5">5x5</option>
-            <option value="6">6x6</option>
-            <option value="7">7x7</option>
-            <option value="8">8x8</option>
-            <option value="9">9x9</option>
-            <option value="10">10x10</option>
-            <option value="11">11x11</option>
-            <option value="12">12x12</option>
-            <option value="13">13x13</option>
-            <option value="14">14x14</option>
-            <option value="15">15x15</option>
-            <option value="16">16x16</option>
-            <option value="17">17x17</option>
-            <option value="18">18x18</option>
-            <option value="19">19x19</option>
-            <option value="20">20x20</option>
-        </select>
-        <label for="image-options">Selecciona la imagen:</label>
-        <select id="image-options">
-            <option value="Mariposa.jpg">Mariposa</option>
-            <option value="OsoPolar.jpg">Oso Polar</option>
-            <option value="Flores.jpg">Flores</option>
-            <option value="Leopardo.jpg">Leopardo</option>
-            <option value="Alpaca.jpg">Alpaca</option>
-            <option value="Paisaje.jpg">Paisaje</option>
-        </select>
-        <button id="start-button">Comenzar Juego</button>
+        <div class="selectOptions" >
+            <div>
+                <label id="tamañop">Seleccione el tamaño del puzzle</label>
+                <select id="board-size">
+                    <option value="3">3 x 3</option>
+                    <option value="4">4 x 4</option>
+                    <option value="5">5 x 5</option>
+                    <option value="6">6 x 6</option>
+                    <option value="7">7 x 7</option>
+                    <option value="8">8 x 8</option>
+                    <option value="9">9 x 9</option>
+                    <option value="10">10 x 10</option>
+                    <option value="11">11 x 11</option>
+                    <option value="12">12 x 12</option>
+                    <option value="13">13 x 13</option>
+                    <option value="14">14 x 14</option>
+                    <option value="15">15 x 15</option>
+                    <option value="16">16 x 16</option>
+                    <option value="17">17 x 17</option>
+                    <option value="18">18 x 18</option>
+                    <option value="19">19 x 19</option>
+                    <option value="20">20 x 20</option>
+                </select>
+            </div>
+            <div>
+                <label id="imagenp">Selecciona la imagen:</label>
+                <select id="image-options">
+                    <option value="Imagenes/Mariposa.jpg">Mariposa</option>
+                    <option value="Imagenes/OsoPolar.jpg">Oso Polar</option>
+                    <option value="Imagenes/Flores.jpg">Flores</option>
+                    <option value="Imagenes/Leopardo.jpg">Leopardo</option>
+                    <option value="Imagenes/Alpaca.jpg">Alpaca</option>
+                    <option value="Imagenes/Paisaje.jpg">Paisaje</option>
+                </select>
+            </div>
+        </div>
+        <div class="buttons">
+            <button id="start-button">Comenzar Juego</button>
+            <button id="solve-buttonB">Resolver con Backtracking</button>
+            <button id="solve-buttonA">Resolver con A*</button>
+        </div>
         <div id="board-container">
             <div id="board"></div>
         </div>
+        <div id="movements">
+        </div>
+        <div id="message" class="hidden">
+            <p>Has completado el rompecabezas, felicidades</p>
+        </div>
     </div>
-    <script src="puzzle.js"></script>
+    <script type="module" src="backtracking.js"></script>
+    <script type="module" src="puzzle.js"></script>
 </body>
 </html>
-

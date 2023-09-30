@@ -1,81 +1,337 @@
+
 const boardSizeInput = document.getElementById('board-size');
 const startButton = document.getElementById('start-button');
+const backTrackingButton = document.getElementById('solve-buttonB');
 const board = document.getElementById('board');
-const boardContainer = document.getElementById('board-container');
 const imageOptions = document.getElementById('image-options');
-const fullImage = document.getElementById('full-image');
-let imagePieces = [];
+const movements = document.getElementById('movements');
+const completion = document.getElementById('message');
+completion.classList.add('hidden');
 
-startButton.addEventListener('click', () => {
-    const size = parseInt(boardSizeInput.value);
-    const selectedImage = imageOptions.value;
-    createPuzzleBoard(size, selectedImage);
-});
+let imageWidth;
+let imageHeight;
+
+let backTrackingAlgorithm
+
+var moves;
+var success;
+
+let emptyCell = {
+    
+    x: 0,
+    y: 0,
+    newPositionX: 0,
+    newPositionY: 0
+};
+
+let cellsList = [];
+let currentCellPositions = []; // Variable para guardar las posiciones actuales de las celdas
 
 function createPuzzleBoard(size, selectedImage) {
+    moves = 0;
     board.innerHTML = '';
     board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-
+    const newPosition = 0;
     const image = new Image();
     image.src = selectedImage;
 
     image.onload = () => {
-        const imageWidth = image.width;
-        const imageHeight = image.height;
+        imageWidth = image.width;
+        imageHeight = image.height;
 
-        const cellSize = Math.min(imageWidth / size, imageHeight / size);
+        cellsList = [];
+        currentCellPositions = []; // Limpiar las posiciones actuales antes de crear el nuevo rompecabezas
 
-        const emptyCellX = size - 1;
-        const emptyCellY = size - 1;
+        const emptyX = Math.floor(Math.random() * size); // Posición X aleatoria para la casilla vacía
+        const emptyY = Math.floor(Math.random() * size); // Posición Y aleatoria para la casilla vacía
 
-        imagePieces = [];
         for (let y = 0; y < size; y++) {
             for (let x = 0; x < size; x++) {
-                const canvas = document.createElement('canvas');
-                canvas.width = cellSize;
-                canvas.height = cellSize;
-                const ctx = canvas.getContext('2d');
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.style.width = `${imageWidth / size}px`;
+                cell.style.height = `${imageHeight / size}px`;
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                const offsetX = (imageWidth / size) * x;
+                const offsetY = (imageHeight / size) * y;
 
-                if (x === emptyCellX && y === emptyCellY) {
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(0, 0, cellSize, cellSize);
+                if (x === emptyX && y === emptyY) {
+                    // Casilla vacía
+                    cell.style.backgroundColor = 'grey';
+                    emptyCell.cell = cell;
+                    emptyCell.newPositionX = x;
+                    emptyCell.newPositionY = y;
+                    emptyCell.x = cell.data-x;
+                    emptyCell.y = cell.y;
+                    
+                    emptyCell.cell.addEventListener('click', () => { movePiece(cell, size); });
+                    console.log(emptyCell);
+                    console.log(emptyCell.cell);
+                    console.log(cell);
+                    
                 } else {
-                    ctx.drawImage(
-                        image,
-                        x * (imageWidth / size),
-                        y * (imageHeight / size),
-                        imageWidth / size,
-                        imageHeight / size,
-                        0,
-                        0,
-                        cellSize,
-                        cellSize
-                    );
+                    cell.style.backgroundImage = `url(${selectedImage})`;
+                    cell.style.backgroundSize = `${imageWidth}px ${imageHeight}px`;
+                    cell.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
+                    console.log(cell);
+                    cell.addEventListener('click', () => { movePiece(cell, size); });
+                    
                 }
-                imagePieces.push(canvas.toDataURL());
+                cell.dataset.newPositionX = x;
+                cell.dataset.newPositionY = y;
+                cellsList.push(cell);
+                board.appendChild(cell);
             }
         }
-
-        shuffleArray(imagePieces); // Mezcla aleatoriamente las partes
-
-        for (let i = 0; i < size * size; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'grid-cell';
-
-            const puzzleImage = new Image();
-            puzzleImage.src = imagePieces[i];
-
-            cell.appendChild(puzzleImage);
-            board.appendChild(cell);
-        }
-
+        shuffleArray(cellsList, size); // Reorganizar las celdas aleatoriamente
     };
 }
 
-// Función para mezclar un array aleatoriamente (shuffle)
-function shuffleArray(array) {
+function deepCopy(obj) {
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+
+    if (Array.isArray(obj)) {
+        const copyArr = [];
+        obj.forEach(item => {
+            copyArr.push(deepCopy(item));
+        });
+        return copyArr;
+    }
+
+    const copyObj = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            copyObj[key] = deepCopy(obj[key]);
+        }
+    }
+
+    return copyObj;
+}
+
+function movePiece(cell, size) {
+    const emptyCellCopyX = deepCopy(emptyCell.cell.dataset.x);
+    const emptyCellCopyY = deepCopy(emptyCell.cell.dataset.y);
+    const emptyCellCopyNX = deepCopy(emptyCell.cell.dataset.newPositionX);
+    const emptyCellCopyNY = deepCopy(emptyCell.cell.dataset.newPositionY);
+    const pp = cell;
+    const CellCopyX = deepCopy(cell.dataset.x);
+    const CellCopyY = deepCopy(cell.dataset.y);
+    const CellCopyNX = deepCopy(cell.dataset.newPositionX);
+    const CellCopyNY = deepCopy(cell.dataset.newPositionY);
+
+    // Calcular la diferencia en las coordenadas X e Y entre la celda y la casilla vacía
+    const dx = Math.abs(CellCopyNX - emptyCellCopyNX);
+    const dy = Math.abs(CellCopyNY - emptyCellCopyNY);
+
+    // Verificar si la celda se encuentra adyacente a la casilla vacía
+    if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+
+        // Intercambiar la imagen de fondo de la celda y la casilla vacía
+        emptyCell.cell.style.backgroundColor = 'transparent';
+        emptyCell.cell.style.backgroundImage = cell.style.backgroundImage;
+        emptyCell.cell.style.backgroundPosition = cell.style.backgroundPosition;
+        emptyCell.cell.style.backgroundSize = cell.style.backgroundSize;
+        cell.style.backgroundImage = '';
+        cell.style.backgroundColor = 'grey';
+
+        // Cambiar posiciones en el dataset
+        cell = emptyCell.cell;
+        cell.dataset.x = CellCopyX;
+        cell.dataset.y = CellCopyY;
+        cell.dataset.newPositionX = emptyCellCopyNX;
+        cell.dataset.newPositionY = emptyCellCopyNY;
+        emptyCell = {
+            cell: pp,
+            x: emptyCellCopyX,
+            y: emptyCellCopyY,
+            newPositionX: CellCopyNX,
+            newPositionY: CellCopyNY
+        };
+        emptyCell.cell.dataset.x = emptyCell.x;
+        emptyCell.cell.dataset.y = emptyCell.y;
+        emptyCell.cell.dataset.newPositionX = emptyCell.newPositionX;
+        emptyCell.cell.dataset.newPositionY = emptyCell.newPositionY;
+
+        console.log('casilla', cell);
+        console.log('vacia', emptyCell.cell);
+
+        moves++;
+        movements.textContent = moves; // Actualiza el contenido del elemento HTML con el puntaje
+        console.log('Movimientos: ', moves);
+
+        // Verificar si todas las casillas están en sus posiciones originales
+        if (checkPuzzleCompletion(size)) {
+            // El rompecabezas está completo, puedes mostrar un mensaje o realizar alguna acción
+            console.log('¡Has completado el rompecabezas!');
+            console.log('Movimientos totales: ', moves);
+            completion.classList.remove('hidden');
+        }
+        } else {
+        // La celda no es adyacente a la casilla vacía, no se realiza el movimiento
+        console.log('Movimiento inválido');
+        }
+}
+
+// Función para verificar si se ha completado el rompecabezas
+function checkPuzzleCompletion(size) {
+    success = 0;
+    for (let i = 0; i < cellsList.length; i++) {
+        const cell = cellsList[i];
+        const cellX = parseInt(cell.dataset.newPositionX);
+        const cellY = parseInt(cell.dataset.newPositionY);
+
+        //console.log(i, cellX, cellY);
+        // Verificar si la celda está en su posición original
+        if (cellX == parseInt(cell.dataset.x) && cellY == parseInt(cell.dataset.y)) {
+            
+            console.log(cellX, cellY, parseInt(cell.dataset.x), parseInt(cell.dataset.y));
+            success++;
+            if (success == size*size-1){
+                return true;
+            }
+            //return false; // Todas las celdas están en sus posiciones originales
+        }
+    }
+
+    return false; // Al menos una celda no está en su posición original
+}
+
+function shuffleArray(array, size) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
+
+        // Actualizar las posiciones de las celdas en el dataset y el estilo
+        const tempX = array[i].dataset.x;
+        const tempY = array[i].dataset.y;
+        array[i].dataset.x = array[j].dataset.x;
+        array[i].dataset.y = array[j].dataset.y;
+        array[i].style.backgroundPosition = `-${(imageWidth / size) * array[j].dataset.x}px -${(imageHeight / size) * array[j].dataset.y}px`;
+        array[j].dataset.x = tempX;
+        array[j].dataset.y = tempY;
+        array[j].style.backgroundPosition = `-${(imageWidth / size) * tempX}px -${(imageHeight / size) * tempY}px`;
     }
 }
+
+//Algoritmo backtracking
+//***********************************************************************************************
+class BackTracking {
+
+    constructor( board ) {
+       this.updateBoardState(board)
+    }
+
+    updateBoardState(newBoard){
+        this.board = newBoard;
+        this.size = Math.sqrt(this.board);
+    }
+ 
+    verifyValidMove( cell ) {
+        const emptyCellCopyNX = deepCopy(emptyCell.cell.dataset.newPositionX);
+        const emptyCellCopyNY = deepCopy(emptyCell.cell.dataset.newPositionY);
+        const CellCopyX = deepCopy(cell.dataset.x);
+        const CellCopyY = deepCopy(cell.dataset.y);
+        const CellCopyNX = deepCopy(cell.dataset.newPositionX);
+        const CellCopyNY = deepCopy(cell.dataset.newPositionY);
+
+        // Calcular la diferencia en las coordenadas X e Y entre la celda y la casilla vacía
+        const dx = Math.abs(CellCopyNX - emptyCellCopyNX);
+        const dy = Math.abs(CellCopyNY - emptyCellCopyNY);
+
+        // Verificar si la celda se encuentra adyacente a la casilla vacía
+        if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+            // Cambiar posiciones en el dataset
+            cell = emptyCell.cell;
+            cell.dataset.x = CellCopyX;
+            cell.dataset.y = CellCopyY;
+            cell.dataset.newPositionX = emptyCellCopyNX;
+            cell.dataset.newPositionY = emptyCellCopyNY;
+            emptyCell.cell.dataset.x = emptyCell.x;
+            emptyCell.cell.dataset.y = emptyCell.y;
+            emptyCell.cell.dataset.newPositionX = emptyCell.newPositionX;
+            emptyCell.cell.dataset.newPositionY = emptyCell.newPositionY;
+            return true
+        } else {
+            return false;
+        }
+    }
+
+    getAllValidMoves() {
+        //Se limpia la lista
+        this.validMoves = []
+        for ( let i = 0; i < this.board.length; i++ ) {
+            if ( this.verifyValidMove(this.board[i]) ) {
+                //Se agregan las casillas que se pueden mover
+                this.validMoves.push(this.board[i])
+            }
+        }
+        console.log("Posibles movimientos:", this.validMoves)
+        return this.validMoves
+    }
+
+    checkPuzzleCompletion() {
+        success = 0;
+        for (let i = 0; i < this.board.length; i++) {
+            const cell = this.board[i];
+            const cellX = parseInt(cell.dataset.newPositionX);
+            const cellY = parseInt(cell.dataset.newPositionY);
+    
+            //console.log(i, cellX, cellY);
+            // Verificar si la celda está en su posición original
+            if (cellX == parseInt(cell.dataset.x) && cellY == parseInt(cell.dataset.y)) {
+                
+                console.log(cellX, cellY, parseInt(cell.dataset.x), parseInt(cell.dataset.y));
+                success++;
+                if (success == this.size**2 - 1){
+                    return true;
+                }
+                //return false; // Todas las celdas están en sus posiciones originales
+            }
+        }
+    
+        return false; // Al menos una celda no está en su posición original
+    }
+ 
+    solve(validMovesLength){
+        //Encontramos una solución
+        if ( this.checkPuzzleCompletion() ) {
+            return true;
+        }
+        console.log("Reinicio")
+
+        for ( let i = 0; i < validMovesLength; i++ ) {
+            //Realiza el movimiento, con 100ms de diferencia para que se note
+            setTimeout(this.validMoves[i].click(), 100)
+            let validMoves = this.getAllValidMoves()
+
+            //Llama recursivamente con el nuevo estado, en caso de estar resuelto, nos retornara true
+            if ( this.solve(validMoves.length) ) {
+                alert("HAZ COMPLETADO EL JUEGO")
+                return
+            }
+            //Se rehace el movimiento
+            setTimeout(this.validMoves[i].click(), 100)
+        }
+        alert("No existe solucion")
+
+    }
+}
+//***********************************************************************************************
+
+
+startButton.addEventListener('click', () => {
+    const size = parseInt(boardSizeInput.value);
+    const selectedImage = imageOptions.value;
+    completion.classList.add('hidden');
+    movements.textContent = 0;
+    createPuzzleBoard(size, selectedImage);
+});
+
+backTrackingButton.addEventListener('click', () => {
+    backTrackingAlgorithm = new BackTracking(cellsList)
+    //Se llama la solucion
+    backTrackingAlgorithm.solve( backTrackingAlgorithm.getAllValidMoves().length )
+})

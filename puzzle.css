@@ -1,6 +1,5 @@
 body {
-    text-align: center;
-    font-family: Arial, sans-serif;
+    font-family: 'Slabo 27px', sans-serif;
     margin: 0;
     padding: 0;
 }
@@ -9,38 +8,39 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100vh;
+    justify-content: flex-start; /* Cambiar a "flex-start" para alinear el contenido en la parte superior */
+    height: 150vh;
+    position: relative;
+    background-color: #ececec;
 }
 
 h1 {
-    margin-top: 20px;
+    margin-top: 5px;
+    margin-left: 20px;
+    width:100%;
 }
 
 #board-container {
-    margin-top: 20px;
-    padding: 20px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    max-width: 80%; /* Ancho máximo del contenedor */
-    max-height: 80vh; /* Altura máxima del contenedor */
-    overflow: hidden; /* Oculta contenido que se desborda */
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden; /* Oculta el contenido que se desborda */
+    position: relative;
 }
 
 #image-container {
     max-width: 100%;
     max-height: 100%;
     overflow: hidden; /* Oculta el contenido de la imagen que se desborda */
+    position: relative;
 }
+
 
 #puzzle-image {
     max-width: 100%;
     max-height: 100%;
     width: auto;
     height: auto;
+    position: relative;
 }
 
 #board {
@@ -48,6 +48,7 @@ h1 {
     background-color: grey;
     max-width: 100%; /* Asegura que el tablero no se salga del contenedor */
     max-height: 100%; /* Asegura que el tablero no se salga del contenedor */
+    position: relative;
 }
 
 .grid-cell {
@@ -60,15 +61,93 @@ h1 {
     justify-content: center;
     align-items: center;
     overflow: hidden; /* Oculta contenido que se desborda */
+    position: relative;
 }
 
 .grid-cell img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain; /* Ajusta la imagen para caber completamente en la celda */
+    position: relative;
 }
 
-#start-button {
-    display: block;
-    margin: 20px auto;
+#board-size, #image-options{
+    font-family: 'Slabo 27px', sans-serif;
+    font-size: 15px;
+}
+
+.buttons button{
+    font-size: 15px;
+    margin-top: 20px;
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 20px;
+    background-color: rgb(59, 59, 207);
+    color:white;
+    font-weight: bold;
+    padding:10px;
+    border-radius: 5px;
+    border: none;
+    box-shadow: 0px 5px 5px rgb(184, 184, 184);
+}
+
+.buttons button:hover {
+    animation: grow 0.3s ease-in-out;
+    transform: scale(1.1); 
+        box-shadow: 0px 0px 0px rgb(184, 184, 184);
+}
+
+@keyframes grow {
+    0% {
+        transform: scale(1);
+        box-shadow: 0px 5px 5px rgb(184, 184, 184);
+    }
+    100% {
+        transform: scale(1.05); 
+        box-shadow: 0px 0px 0px rgb(184, 184, 184);
+    }
+}
+
+
+.selectOptions {
+    width:100%;
+    height: 5vh;
+    min-height:30px;
+    display:flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+
+.board-size{
+    display: flex;
+    margin-top: 10px;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+}
+
+#tamañop, #imagenp {
+    margin-bottom: 5px;
+    font-size: 17px;
+}
+
+#imagenp {
+    margin-top: 15px;
+}
+
+#movements{
+    position: absolute;
+    top: 50%; 
+    left: 20px;
+    width: 20%;
+    height: 15%;
+}
+
+#movements::before{
+    content: "Cantidad de movimientos realizados: ";
+}
+
+.hidden {
+    opacity: 0;
 }
