@@ -1,102 +1,113 @@
-class Node {
-   constructor(board, cost, heuristic, parent) {
-       this.board = board;
-       this.cost = cost;
-       this.heuristic = heuristic;
-       this.parent = parent;
-   }
+/**
+ * Clase que representa un nodo en el espacio de búsqueda del rompecabezas.
+ */
+class PuzzleNode {
+    constructor(board, emptyCell, moves) {
+        this.board = board;
+        this.emptyCell = emptyCell;
+        this.moves = moves;
+        this.heuristic = this.calculateHeuristic();
+    }
 
-   getTotalCost() {
-       return this.cost + this.heuristic;
-   }
+    // Calcula la heurística (número de fichas mal colocadas)
+    calculateHeuristic() {
+        let misplacedTiles = 0;
+        for (let i = 0; i < this.board.length; i++) {
+            const cell = this.board[i];
+            if (cell.x !== cell.target.x || cell.y !== cell.target.y) {
+                misplacedTiles++;
+            }
+        }
+        return misplacedTiles;
+    }
+
+    // Calcula el costo total del nodo (g + h)
+    getTotalCost() {
+        return this.moves + this.heuristic;
+    }
 }
 
-function solvePuzzleAStar(size) {
-   const initialBoard = getCurrentBoardState(size);
-   const solvedBoard = getGoalBoard(size);
+/**
+ * Resuelve el rompecabezas utilizando el algoritmo A*.
+ */
+class AStarSolver {
 
-   const heuristic = (board) => {
-       let misplaced = 0;
-       for (let y = 0; y < size; y++) {
-           for (let x = 0; x < size; x++) {
-               if (board[x][y].x !== solvedBoard[x][y].x || board[x][y].y !== solvedBoard[x][y].y) {
-                   misplaced++;
-               }
-           }
-       }
-       return misplaced;
-   };
+    constructor(board, emptyCell) {
+        this.board = board;
+        this.emptyCell = emptyCell;
+        this.size = Math.sqrt(this.board.length);
+    }
 
-   const openSet = new PriorityQueue((a, b) => a.getTotalCost() - b.getTotalCost());
-   const closedSet = new Set();
+    // Encuentra la posición del nodo vacío en el tablero
+    findEmptyCellPosition(board) {
+        for (let i = 0; i < board.length; i++) {
+            const cell = board[i];
+            if (cell.x === this.emptyCell.x && cell.y === this.emptyCell.y) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
-   const startNode = new Node(initialBoard, 0, heuristic(initialBoard), null);
-   openSet.enqueue(startNode);
+    // Genera los movimientos válidos a partir de un estado dado
+    generateValidMoves(node) {
+        const validMoves = [];
+        const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]; // Movimientos arriba, derecha, abajo, izquierda
 
-   while (!openSet.isEmpty()) {
-       const currentNode = openSet.dequeue();
+        for (const dir of directions) {
+            const newX = node.emptyCell.x + dir[0];
+            const newY = node.emptyCell.y + dir[1];
 
-       if (checkPuzzleCompletion(currentNode.board, size)) {
-           //Encontramos la solución, reconstruir el camino
-           const solutionPath = [];
-           let current = currentNode;
-           while (current !== null) {
-               solutionPath.push(current.board);
-               current = current.parent;
-           }
-           solutionPath.reverse();
-           console.log('Se encontró una solución:');
-           console.log(`Movimientos realizados: ${solutionPath.length - 1}`);
-           for (let i = 1; i < solutionPath.length; i++) {
-               console.log(`Movimiento ${i}:`);
-               printBoard(solutionPath[i], size);
-           }
-           return;
-       }
+            if (newX >= 0 && newX < this.size && newY >= 0 && newY < this.size) {
+                const index = this.findEmptyCellPosition(node.board);
+                const newBoard = node.board.slice(); // Clonar el tablero actual
+                newBoard[index] = node.board[newX * this.size + newY];
+                newBoard[newX * this.size + newY] = this.emptyCell;
+                validMoves.push(new PuzzleNode(newBoard, { x: newX, y: newY }, node.moves + 1));
+            }
+        }
+        return validMoves;
+    }
 
-       closedSet.add(JSON.stringify(currentNode.board));
+    // Resuelve el rompecabezas utilizando el algoritmo A*
+    solve() {
+        const startNode = new PuzzleNode(this.board, this.emptyCell, 0);
+        const openSet = [startNode];
+        const closedSet = new Set();
 
-       const emptyCell = findEmptyCell(currentNode.board, size);
-       const possibleMoves = getPossibleMoves(emptyCell, size);
+        while (openSet.length > 0) {
+            // Ordenar la lista de nodos por el costo total (f = g + h)
+            openSet.sort((a, b) => a.getTotalCost() - b.getTotalCost());
 
-       for (const move of possibleMoves) {
-           const newBoard = makeMove(currentNode.board, emptyCell, move);
-           const newNode = new Node(newBoard, currentNode.cost + 1, heuristic(newBoard), currentNode);
+            const currentNode = openSet.shift();
 
-           if (!closedSet.has(JSON.stringify(newBoard))) {
-               openSet.enqueue(newNode);
-           }
-       }
-   }
+            // Verificar si hemos llegado al estado objetivo
+            if (currentNode.heuristic === 0) {
+                alert("¡Has completado el rompecabezas en ${currentNode.moves} movimientos!");
+                return;
+            }
 
-   console.log('No se encontró una solución.');
+            // Marcar el nodo actual como visitado
+            closedSet.add(JSON.stringify(currentNode.board));
+
+            // Generar movimientos válidos desde el nodo actual
+            const validMoves = this.generateValidMoves(currentNode);
+
+            for (const move of validMoves) {
+                const key = JSON.stringify(move.board);
+                if (!closedSet.has(key)) {
+                    openSet.push(move);
+                }
+            }
+        }
+
+        alert("No existe solución para este rompecabezas.");
+    }
 }
 
-//Implementación de PriorityQueue (cola de prioridad)
-class PriorityQueue {
-   constructor(comparator) {
-       this.elements = [];
-       this.comparator = comparator || ((a, b) => a - b);
-   }
-
-   enqueue(element) {
-       this.elements.push(element);
-       this.elements.sort(this.comparator);
-   }
-
-   dequeue() {
-       return this.elements.shift();
-   }
-
-   isEmpty() {
-       return this.elements.length === 0;
-   }
-}
-
-//Llamar a la función para resolver el rompecabezas con A*
-solveButtonA.addEventListener('click', () => {
-   const size = parseInt(boardSizeInput.value);
-   const selectedImage = imageOptions.value;
-   createPuzzleBoard(size, selectedImage);
-   solvePuzzleAStar(size);
+// Event listener para el botón de resolución con A*
+aEstrellaButton.addEventListener('click', () => {
+    const aStarSolver = new AStarSolver(cellObjets, specialCell);
+    aStarSolver.solve();
 });
+
