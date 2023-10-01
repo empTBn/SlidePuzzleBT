@@ -20,13 +20,15 @@ class Node {
             [x + 1, y]
         ];
         const children = [];
-        for (const [i, j] of valList) {
-            const child = this.shuffle(this.data, x, y, i, j);
+
+        for (const [newX, newY] of valList) {
+            const child = this.shuffle(this.data, x, y, newX, newY);
             if (child !== null) {
                 const childNode = new Node(child, this.level + 1, 0);
                 children.push(childNode);
             }
         }
+
         return children;
     }
 
@@ -34,7 +36,7 @@ class Node {
      * Mueve el espacio en blanco en la dirección especificada y devuelve el nuevo estado del rompecabezas.
      */
     shuffle(puz, x1, y1, x2, y2) {
-        if (x2 >= 0 && x2 < puz.length && y2 >= 0 && y2 < puz[0].length) {
+        if (x2 >= 0 && x2 < puz.length && y2 >= 0 && y2 < puz.length) {
             const tempPuz = this.copy(puz);
             const temp = tempPuz[x2][y2];
             tempPuz[x2][y2] = tempPuz[x1][y1];
@@ -51,7 +53,8 @@ class Node {
     copy(root) {
         const temp = [];
         for (const row of root) {
-            temp.push([...row]);
+            const t = row.slice();
+            temp.push(t);
         }
         return temp;
     }
@@ -67,28 +70,46 @@ class Node {
                 }
             }
         }
+        return [-1, -1];
     }
 }
 
 /**
  * Implementación del algoritmo A* para resolver el rompecabezas.
  */
-class PuzzleSolver {
+class Puzzle {
     constructor(size) {
-        this.size = size;
+        this.n = size;
         this.open = [];
         this.closed = [];
     }
 
+    accept() {
+        const puz = [];
+        for (let i = 0; i < this.n; i++) {
+            const temp = prompt().split(" ");
+            puz.push(temp);
+        }
+        return puz;
+    }
+
+    /**
+     * Calcula el valor f(x) utilizado en el algoritmo A* (f(x) = h(x) + g(x)).
+     */
+    f(start, goal) {
+        return this.h(start.data, goal) + start.level;
+    }
+    
     /**
      * Calcula la heurística h(x) que representa la diferencia entre el rompecabezas actual y el objetivo.
      */
+
     h(start, goal) {
         let temp = 0;
-        for (let i = 0; i < this.size; i++) {
-            for (let j = 0; j < this.size; j++) {
+        for (let i = 0; i < this.n; i++) {
+            for (let j = 0; j < this.n; j++) {
                 if (start[i][j] !== goal[i][j] && start[i][j] !== '_') {
-                    temp += 1;
+                    temp++;
                 }
             }
         }
@@ -96,30 +117,36 @@ class PuzzleSolver {
     }
 
     /**
-     * Calcula el valor f(x) utilizado en el algoritmo A* (f(x) = h(x) + g(x)).
-     */
-    f(start, goal) {
-        return this.h(start, goal) + start.level;
-    }
-
-    /**
      * Resuelve el rompecabezas utilizando el algoritmo A*.
      */
-    solve(start, goal) {
-        start = new Node(start, 0, 0);
-        start.fval = this.f(start, goal);
-        this.open.push(start);
+    process() {
+        console.log("Empieza el rompecabezas\n");
+        const start = this.accept();
+        console.log("Termino el rompezabezas\n");
+        const goal = this.accept();
+
+        const startNode = new Node(start, 0, 0);
+        startNode.fval = this.f(startNode, goal);
+        this.open.push(startNode);
+        console.log("\n\n");
 
         while (true) {
             const cur = this.open[0];
+            console.log("");
+            console.log("  | ");
+            console.log("  | ");
+            console.log(" \\\'/ \n");
+            for (const row of cur.data) {
+                console.log(row.join(" "));
+            }
 
             if (this.h(cur.data, goal) === 0) {
                 break;
             }
 
-            for (const child of cur.generateChild()) {
-                child.fval = this.f(child, goal);
-                this.open.push(child);
+            for (const childNode of cur.generateChild()) {
+                childNode.fval = this.f(childNode, goal);
+                this.open.push(childNode);
             }
 
             this.closed.push(cur);
