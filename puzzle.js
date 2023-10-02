@@ -26,6 +26,7 @@ let emptyCell = {
 let cellsList = [];
 let currentCellPositions = []; // Variable para guardar las posiciones actuales de las celdas
 let cellObjets = []
+let orderList = []
 
 let specialCell;
 
@@ -68,36 +69,18 @@ function createPuzzleBoard(size, selectedImage) {
                     emptyCell.y = cell.y;
                     
                     emptyCell.cell.addEventListener('click', () => { movePiece(cell, size); });
-                    //Guardo el objeto casilla
-                    cellObjets.push({
-                        x:0,
-                        y:0,
-                        cell:emptyCell.cell,
-                        target:{
-                            x:emptyX,
-                            y:emptyY
-                        }
-                    })
-
-                    specialCell = cellObjets[cellObjets.length - 1]
+                    //Agrego este objeto a la lista
+                    cellObjets.push({cell:cell, empty:true, x:x, y:y})
+                    
                     
                 } else {
                     cell.style.backgroundImage = `url(${selectedImage})`;
                     cell.style.backgroundSize = `${imageWidth}px ${imageHeight}px`;
                     cell.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
                     console.log(cell);
-                    cell.addEventListener('click', () => { movePiece(cell, size); });
-                    //Guardo el objeto casilla
-                    cellObjets.push({
-                        x:0,
-                        y:0,
-                        cell,
-                        target:{
-                            x,
-                            y
-                        }
-                    })
-                    
+                    cell.addEventListener('click', () => { movePiece(cell, size); })
+                    //Agrego este objeto a la lista
+                    cellObjets.push({cell:cell, empty:false, x:x, y:y})
                 }
                 cell.dataset.newPositionX = x;
                 cell.dataset.newPositionY = y;
@@ -105,6 +88,7 @@ function createPuzzleBoard(size, selectedImage) {
                 board.appendChild(cell);
             }
         }
+        orderList = cellsList
         shuffleArray(cellsList, size); // Reorganizar las celdas aleatoriamente
     };
 }
@@ -164,6 +148,10 @@ function movePiece(cell, size) {
         cell.dataset.y = CellCopyY;
         cell.dataset.newPositionX = emptyCellCopyNX;
         cell.dataset.newPositionY = emptyCellCopyNY;
+
+
+
+
         emptyCell = {
             cell: pp,
             x: emptyCellCopyX,
@@ -191,8 +179,8 @@ function movePiece(cell, size) {
             completion.classList.remove('hidden');
         }
         } else {
-        // La celda no es adyacente a la casilla vacía, no se realiza el movimiento
-        console.log('Movimiento inválido');
+            // La celda no es adyacente a la casilla vacía, no se realiza el movimiento
+            console.log('Movimiento inválido');
         }
 }
 
@@ -226,18 +214,6 @@ function shuffleArray(array, size) {
         const tempX = array[i].dataset.x;
         const tempY = array[i].dataset.y; 
 
-        const tempX2 = cellObjets[i].x
-        const tempY2 = cellObjets[i].y
-
-        console.log(tempX, tempY)
-        console.log(array[j].dataset.x, array[j].dataset.y)
-
-        cellObjets[i].x = parseInt(array[j].dataset.x)
-        cellObjets[i].y = parseInt(array[j].dataset.y)
-
-        cellObjets[j].x = parseInt(tempX2)
-        cellObjets[j].y = parseInt(tempY2)
-
         array[i].dataset.x = array[j].dataset.x;
         array[i].dataset.y = array[j].dataset.y;
         array[i].style.backgroundPosition = `-${(imageWidth / size) * array[j].dataset.x}px -${(imageHeight / size) * array[j].dataset.y}px`;
@@ -245,91 +221,160 @@ function shuffleArray(array, size) {
         array[j].dataset.y = tempY;
         array[j].style.backgroundPosition = `-${(imageWidth / size) * tempX}px -${(imageHeight / size) * tempY}px`;
     }
-    
 }
 
 //Algoritmo backtracking
 //***********************************************************************************************
 class BackTracking {
 
-    constructor( board, emptyCell ) {
-        console.log("Tableroo", board)
-        this.updateBoardState(board)
-        this.emptyCell = emptyCell;
+    constructor( board, cellObjects ) {
+        this.moves = []
+        this.updateBoardState(board, cellObjects)
+        this.setNewCords()
     }
  
-    updateBoardState(newBoard){
+    updateBoardState(newBoard, cellObjects){
         this.board = newBoard;
+        this.cellObjects = cellObjects // Corregido aquí
         this.size = Math.sqrt(this.board.length);
     }
 
-    changePosition(cell) {
-        let auxEmptyCell = this.emptyCell
-        let auxCell = cell
-        cell.x = auxEmptyCell.x
-        cell.y = auxEmptyCell.y
-        this.emptyCell.x = auxCell.x
-        this.emptyCell.y = auxCell.y
+    setNewCords() {
+        let matriz = []
+        //La raiz para hacerlo por filas y columnas
+        for (let i = 0; i < Math.sqrt(this.board.length); i++) {
+            const subarray = this.board.slice(i * Math.sqrt(this.board.length), (i + 1) * Math.sqrt(this.board.length));
+            matriz.push(subarray);
+        }
+        //Esto es para asignar como propiedad, las coordenadas originales en que estaba
+        //Asi tenemos las coordenadas actuales y las que queremos llegar
+        for(let i = 0; i < this.cellObjects.length; i++){
+            for(let j = 0; j < matriz.length; j++){
+                for(let k = 0; k < matriz[j].length; k++){
+                    if (this.cellObjects[i].cell == matriz[j][k]) { // Corregido aquí
+                        this.cellObjects[i].targetX = k // Corregido aquí
+                        this.cellObjects[i].targetY = j // Corregido aquí
+                    }
+                }
+            }
+            
+        }
+        //Para declarar nuestra celda vacia como propiedad de la clase
+        this.setEmptyCell()
+    }
+
+    //Para guardar como propiedad la celda vacia
+    setEmptyCell() {
+        for(let i = 0; i < this.cellObjects.length; i++){
+            if (this.cellObjects[i].empty) { // Corregido aquí
+                this.emptyCell = this.cellObjects[i] // Corregido aquí
+            }
+        }
+    }
+
+    //Para obtener el objeto de cada celda
+    getObjectByCell(cell) {
+        for(let i = 0; i < this.cellObjects.length; i++){
+            if (this.cellObjects[i].cell == cell) { // Corregido aquí
+                return this.cellObjects[i] // Corregido aquí
+            }
+        }
     }
  
-    verifyValidMove( cell ) {
-       const dx = Math.abs(cell.x - this.emptyCell.x)
-       const dy = Math.abs(cell.y - this.emptyCell.y)
-       return ((dx === 1 && dy === 0) || (dx === 0 && dy === 1))
+    verifyValidMove( cellObject ) {
+        const dx = Math.abs(cellObject.x - this.emptyCell.x)
+        const dy = Math.abs(cellObject.y - this.emptyCell.y)
+        return ((dx === 1 && dy === 0) || (dx === 0 && dy === 1))
+    }
+
+    cleanList(cellObject) {
+        const auxList = []
+        for(let i = 0; i < this.cellObjects.length; i++) {
+            if (cellObject.cell == this.cellObjects[i].cell) {
+                auxList.push(cellObject)
+            } else if (this.cellObjects[i].empty) {
+                auxList.push(this.emptyCell)
+            } else {
+                auxList.push(this.cellObjects[i])
+            }
+        }
+        this.cellObjects = auxList
+    }
+
+    makeMove(cellObject) {
+        for(let i = 0; i < this.cellObjects.length; i++) {
+            if (cellObject == this.cellObjects[i]) {
+                let auxEmptyCell = this.emptyCell
+                let auxCell = cellObject
+                this.emptyCell.x = auxCell.x
+                this.emptyCell.y = auxCell.y
+                let newCellObject = {
+                    cell:cellObject.cell,
+                    targetX:cellObject.targetX,
+                    targetY:cellObject.targetY,
+                    x:auxEmptyCell.x,
+                    y:auxEmptyCell.y
+                }
+                this.cleanList(newCellObject)
+            }
+        }
     }
  
     getAllValidMoves() {
         //Se limpia la lista
         this.validMoves = []
-        for ( let i = 0; i < this.board.length; i++ ) {
-            if ( this.verifyValidMove(this.board[i]) ) {
+        for ( let i = 0; i < this.cellObjects.length; i++ ) {
+            if ( this.verifyValidMove(this.cellObjects[i])) {
+                console.log("posible", this.cellObjects[i])
                 //Se agregan las casillas que se pueden mover
-                this.validMoves.push(this.board[i])
+                this.validMoves.push(this.cellObjects[i])
             }
         }
         return this.validMoves
     }
- 
-    checkPuzzleCompletion() {
-        //Se compara la posicion actual, con la posicion target
-        console.log("Tablero", this.board)
-        for (let i = 0; i < this.board.length; i++) {
-            if (!( (this.board[i].x === this.board[i].target.x) && (this.board[i].y === this.board[i].target.y) ) ) {
-                console.log(this.board[i])
+
+    verifyWin() {
+        for(let i = 0; i < this.cellObjects.length; i++) {
+            //Si la posicion actual de las casillas con foto es la misma que el target
+            let condition = (this.cellObjects[i].x == this.cellObjects[i].targetX) && (this.cellObjects[i].y == this.cellObjects[i].targetY) && (!this.cellObjects[i].empty)
+            if (!condition) {
+                //Si alguna no lo cumple retorna false
                 return false
             }
         }
         return true
     }
  
-    solve(validMovesLength){
+    solve(validMoves){
         //Encontramos una solución
-        if ( this.checkPuzzleCompletion() ) {
+        if ( this.verifyWin()) {
+            //Hace los movimientos en el tablero cada medio segundo para que se note
+            for (let i = 0; i < this.moves.length; i++) {
+                setTimeout(() => {this.moves[i].cell.click()}, 500)
+            }
+            alert("HAZ COMPLETADO EL JUEGO")
             return true;
         }
- 
-        for ( let i = 0; i < validMovesLength; i++ ) {
-            //Realiza el movimiento, con 100ms de diferencia para que se note
-            setTimeout(() => {}, 100)
-            this.validMoves[i].cell.click()
-            this.changePosition(this.validMoves[i])
-            //Calcula los movimientos posibles luego de que se cambie la posicion
-            let validMoves = this.getAllValidMoves()
- 
+        for (let i = 0; i < validMoves.length; i++ ) {
+            console.log("Mueve", validMoves[i])
+            //Se cambia la posicion de forma logica
+            this.makeMove(validMoves[i])
+            //Se agrega a la pila de movimientos
+            this.moves.push(validMoves[i])
+            //Se actualiza el estado
+            let validMovesUpdate = this.getAllValidMoves()
+            console.log("Validos", validMovesUpdate)
             //Llama recursivamente con el nuevo estado, en caso de estar resuelto, nos retornara true
-            if ( this.solve(validMoves.length) ) {
-                alert("HAZ COMPLETADO EL JUEGO")
+            if ( this.solve(validMovesUpdate) ) {
                 return
             }
-            //Se rehace el movimiento
-            setTimeout(this.validMoves[i].cell.click(), 100)
+            //Se devuelve este movimiento
+            //Se saca de la lista de movimientos
+            console.log("Devuelve", validMoves[i])
+            this.moves.pop()
         }
-        alert("No existe solucion")
- 
     }
  }
- //***********************************************************************************************
-
 
 startButton.addEventListener('click', () => {
     const size = parseInt(boardSizeInput.value);
@@ -340,7 +385,7 @@ startButton.addEventListener('click', () => {
 });
 
 backTrackingButton.addEventListener('click', () => {
-    backTrackingAlgorithm = new BackTracking(cellObjets, specialCell)
+    backTrackingAlgorithm = new BackTracking(orderList, cellObjets)
     //Se llama la solucion
-    backTrackingAlgorithm.solve( backTrackingAlgorithm.getAllValidMoves().length )
+    backTrackingAlgorithm.solve( backTrackingAlgorithm.getAllValidMoves() )
 })
