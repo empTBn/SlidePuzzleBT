@@ -28,6 +28,8 @@ const aEstrellaButton = document.getElementById('solve-buttonA');
  */
 const board = document.getElementById('board');
 
+let orderList = [];
+
 /**
  * Representa el elemento HTML para las opciones de imagen.
  * @type {HTMLSelectElement}
@@ -157,16 +159,8 @@ function createPuzzleBoard(size, selectedImage) {
                     emptyCell.y = cell.y;
                     
                     emptyCell.cell.addEventListener('click', () => { movePiece(cell, size); });
-                    //Guardo el objeto casilla
-                    cellObjets.push({
-                        x:0,
-                        y:0,
-                        cell:emptyCell.cell,
-                        target:{
-                            x:emptyX,
-                            y:emptyY
-                        }
-                    })
+                    
+                    cellObjets.push({cell:cell, empty:true, x:x, y:y})
 
                     specialCell = cellObjets[cellObjets.length - 1]
                     
@@ -176,16 +170,8 @@ function createPuzzleBoard(size, selectedImage) {
                     cell.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
                     console.log(cell);
                     cell.addEventListener('click', () => { movePiece(cell, size); });
-                    //Guardo el objeto casilla
-                    cellObjets.push({
-                        x:0,
-                        y:0,
-                        cell,
-                        target:{
-                            x,
-                            y
-                        }
-                    })
+                    //Agrego este objeto a la lista
+                    cellObjets.push({cell:cell, empty:false, x:x, y:y})
                     
                 }
                 cell.dataset.newPositionX = x;
@@ -194,6 +180,9 @@ function createPuzzleBoard(size, selectedImage) {
                 board.appendChild(cell);
             }
         }
+        emptyCell.x = emptyCell.cell.dataset.x;
+        emptyCell.y = emptyCell.cell.dataset.y;
+        orderList = cellsList;
         shuffleArray(cellsList, size); // Reorganizar las celdas aleatoriamente
     };
 }
@@ -306,11 +295,40 @@ function checkPuzzleCompletion(size) {
         const cell = cellsList[i];
         const cellX = parseInt(cell.dataset.newPositionX);
         const cellY = parseInt(cell.dataset.newPositionY);
-
+        console.log("x", cellX, "y", cellY, "esperadox", parseInt(cell.dataset.x), "esperadoY", parseInt(cell.dataset.y))
         //console.log(i, cellX, cellY);
         // Verificar si la celda está en su posición original
         if (cellX == parseInt(cell.dataset.x) && cellY == parseInt(cell.dataset.y)) {
             console.log(cellX, cellY, parseInt(cell.dataset.x), parseInt(cell.dataset.y));
+            console.log(cellX, cellY);
+            success++;
+            if (success == size*size-1){
+                return true;
+            }
+            //return false; // Todas las celdas están en sus posiciones originales
+        }
+    }
+
+    return false; // Al menos una celda no está en su posición original
+}
+
+/**
+ * Comprueba si el rompecabezas está completo.
+ * @param {number} size - El tamaño del tablero del rompecabezas.
+ * @returns {boolean} - Verdadero si se completa el rompecabezas; falso en caso contrario.
+ */
+function checkPuzzleCompletion2(size, cellsList2) {
+    success = 0;
+    for (let i = 0; i < cellsList2.length; i++) {
+        const cell = cellsList2[i];
+        const cellX = parseInt(cell.dataset.newPositionX);
+        const cellY = parseInt(cell.dataset.newPositionY);
+        console.log("x", cellX, "y", cellY, "esperadox", parseInt(cell.dataset.x), "esperadoY", parseInt(cell.dataset.y))
+        //console.log(i, cellX, cellY);
+        // Verificar si la celda está en su posición original
+        if (cellX == parseInt(cell.dataset.x) && cellY == parseInt(cell.dataset.y)) {
+            console.log(cellX, cellY, parseInt(cell.dataset.x), parseInt(cell.dataset.y));
+            console.log(cellX, cellY);
             success++;
             if (success == size*size-1){
                 return true;
@@ -356,92 +374,6 @@ function shuffleArray(array, size) {
     
 }
 
-//Algoritmo backtracking
-//***********************************************************************************************
-
-/**
- * Clase que representa el algoritmo de backtracking para resolver el rompecabezas.
- */
-class BackTracking {
-
-    constructor( board, emptyCell ) {
-        console.log("Tableroo", board)
-        this.updateBoardState(board)
-        this.emptyCell = emptyCell;
-    }
- 
-    updateBoardState(newBoard){
-        this.board = newBoard;
-        this.size = Math.sqrt(this.board.length);
-    }
-
-    changePosition(cell) {
-        let auxEmptyCell = this.emptyCell
-        let auxCell = cell
-        cell.x = auxEmptyCell.x
-        cell.y = auxEmptyCell.y
-        this.emptyCell.x = auxCell.x
-        this.emptyCell.y = auxCell.y
-    }
- 
-    verifyValidMove( cell ) {
-       const dx = Math.abs(cell.x - this.emptyCell.x)
-       const dy = Math.abs(cell.y - this.emptyCell.y)
-       return ((dx === 1 && dy === 0) || (dx === 0 && dy === 1))
-    }
- 
-    getAllValidMoves() {
-        //Se limpia la lista
-        this.validMoves = []
-        for ( let i = 0; i < this.board.length; i++ ) {
-            if ( this.verifyValidMove(this.board[i]) ) {
-                //Se agregan las casillas que se pueden mover
-                this.validMoves.push(this.board[i])
-            }
-        }
-        return this.validMoves
-    }
- 
-    checkPuzzleCompletion() {
-        //Se compara la posicion actual, con la posicion target
-        console.log("Tablero", this.board)
-        for (let i = 0; i < this.board.length; i++) {
-            if (!( (this.board[i].x === this.board[i].target.x) && (this.board[i].y === this.board[i].target.y) ) ) {
-                console.log(this.board[i])
-                return false
-            }
-        }
-        return true
-    }
- 
-    solve(validMovesLength){
-        //Encontramos una solución
-        if ( this.checkPuzzleCompletion() ) {
-            return true;
-        }
- 
-        for ( let i = 0; i < validMovesLength; i++ ) {
-            //Realiza el movimiento, con 100ms de diferencia para que se note
-            setTimeout(() => {}, 100)
-            this.validMoves[i].cell.click()
-            this.changePosition(this.validMoves[i])
-            //Calcula los movimientos posibles luego de que se cambie la posicion
-            let validMoves = this.getAllValidMoves()
- 
-            //Llama recursivamente con el nuevo estado, en caso de estar resuelto, nos retornara true
-            if ( this.solve(validMoves.length) ) {
-                alert("HAZ COMPLETADO EL JUEGO")
-                return
-            }
-            //Se rehace el movimiento
-            setTimeout(this.validMoves[i].cell.click(), 100)
-        }
-        alert("No existe solucion")
- 
-    }
- }
- //***********************************************************************************************
-
 /**
  * Event Listener para el botón de inicio para crear un nuevo tablero de rompecabezas.
  */
@@ -453,133 +385,340 @@ startButton.addEventListener('click', () => {
     createPuzzleBoard(size, selectedImage);
 });
 
-/**
- * Event listener para el botón de resolución con backtracking.
- * Llama al algoritmo de backtracking para resolver el rompecabezas.
- */
-backTrackingButton.addEventListener('click', () => {
-    backTrackingAlgorithm = new BackTracking(cellObjets, specialCell)
-    //Se llama la solucion
-    backTrackingAlgorithm.solve( backTrackingAlgorithm.getAllValidMoves().length )
-})
 
 
-class PuzzleNode {
-    constructor(board, emptyCell, moves, parent) {
-        this.board = board; // Representación actual del tablero
-        this.emptyCell = emptyCell; // Posición de la celda vacía
-        this.moves = moves; // Número de movimientos realizados hasta este nodo
-        this.parent = parent; // Nodo padre
-        this.heuristic = this.calculateHeuristic(); // Valor heurístico (número de fichas mal colocadas)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Define a Puzzle State Class
+class PuzzleState {
+    constructor(board, moves, heuristic) {
+        this.board = board;          // Current puzzle board configuration
+        this.moves = moves;          // Number of moves taken to reach this state
+        this.heuristic = heuristic;  // Heuristic value (e.g., Manhattan distance)
+        this.parent = null;          // Parent state (for tracing back the solution)
     }
 
-    // Calcula la heurística (número de fichas mal colocadas)
-    calculateHeuristic() {
-        let misplacedTiles = 0;
-        for (const cell of this.board) {
-            if (cell.x !== cell.target.x || cell.y !== cell.target.y) {
-                misplacedTiles++;
-            }
-        }
-        return misplacedTiles;
-    }
-
-    // Calcula el costo total del nodo (g + h)
+    // Define a method to calculate the total cost of a state (f(n) = g(n) + h(n))
     getTotalCost() {
         return this.moves + this.heuristic;
     }
-}
 
-class AStarSolver {
-    constructor(board, emptyCell) {
-        this.board = board; // Representación actual del tablero
-        this.emptyCell = emptyCell; // Posición de la celda vacía
-        this.size = Math.sqrt(board.length); // Tamaño del tablero (asumiendo que es cuadrado)
-    }
-
-    // Encuentra la posición de una celda en el tablero
-    findCellPosition(cell) {
-        return cell.x * this.size + cell.y;
-    }
-
-    // Genera los movimientos válidos a partir de un estado dado
-    generateValidMoves(node) {
+    getAllValidMoves(currentNode) {
+        let size = parseInt(boardSizeInput.value);
         const validMoves = [];
-        const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]; // Movimientos arriba, derecha, abajo, izquierda
+    
+        // Find the position of the empty cell
+        const emptyCellX = parseInt(emptyCell.x);
+        const emptyCellY = parseInt(emptyCell.y);
+        console.log("emptyCell", emptyCellX, emptyCellY);
+    
+        // Define the possible directions (up, down, left, right)
+        const directions = [
+            { dx: 0, dy: -1 }, // Up
+            { dx: 0, dy: 1 },  // Down
+            { dx: -1, dy: 0 }, // Left
+            { dx: 1, dy: 0 },  // Right
+        ];
+    
+        // Check each direction
+        for (const direction of directions) {
+            const newX = emptyCellX + direction.dx;
+            const newY = emptyCellY + direction.dy;
+            //console.log("newX", newX, "newY", newY, "emptyCellX", emptyCellX, "emptyCellY", emptyCellY);
+            // Check if the new position is within bounds
+            if (newX >= 0 && newX < size && newY >= 0 && newY < size) {
+                // Create a copy of the current board
+                const newBoard = currentNode.board.slice();
+                /*onsole.log("newBoard", newBoard);
+                // Swap the empty cell with the neighboring cell
+                const emptyIndex = emptyCellY * size + emptyCellX;
+                const neighborIndex = newY * size + newX;
+                console.log("emptyIndex", emptyIndex, "neighborIndex", neighborIndex);
+                [newBoard[emptyIndex], newBoard[neighborIndex]] = [newBoard[neighborIndex], newBoard[emptyIndex]];
+                console.log("nose", [newBoard[emptyIndex]]);
 
-        for (const dir of directions) {
-            const newX = node.emptyCell.x + dir[0];
-            const newY = node.emptyCell.y + dir[1];
-
-            if (newX >= 0 && newX < this.size && newY >= 0 && newY < this.size) {
-                const emptyPos = this.findCellPosition(node.emptyCell);
-                const newBoard = [...node.board]; // Clonar el tablero actual
-                // Intercambiar la celda vacía con la celda adyacente
-                [newBoard[emptyPos], newBoard[this.findCellPosition({ x: newX, y: newY })]] =
-                    [newBoard[this.findCellPosition({ x: newX, y: newY })], newBoard[emptyPos]];
-                validMoves.push(new PuzzleNode(newBoard, { x: newX, y: newY }, node.moves + 1, node));
+                newBoard[emptyIndex].dataset.x = newX;
+                newBoard[emptyIndex].dataset.y = newY;
+                console.log("newBoard", newBoard[emptyIndex]);
+                // Add the new board configuration to the valid moves*/
+                const emptyIndex = buscarposicion(newBoard, emptyCellX, emptyCellY);
+                console.log("emptyIndex", emptyIndex);
+                const neighborIndex = buscarposicion(newBoard, newX, newY);
+                console.log("neighbor", neighborIndex);
+                console.log("indice", newBoard);
+                const copia = newBoard[neighborIndex];
+                newBoard[neighborIndex] = newBoard[emptyIndex];
+                newBoard[emptyIndex] = copia;
+                
+                validMoves.push(newBoard);
             }
         }
+        console.log("validMoves", validMoves);
         return validMoves;
     }
+}
 
-    // Resuelve el rompecabezas utilizando el algoritmo A*
-    solve() {
-        const startNode = new PuzzleNode(this.board, this.emptyCell, 0, null);
-        const openSet = [startNode];
-        const closedSet = new Set();
-
-        while (openSet.length > 0) {
-            // Ordenar la lista de nodos por el costo total (f = g + h)
-            openSet.sort((a, b) => a.getTotalCost() - b.getTotalCost());
-  
-            const currentNode = openSet.shift();
-
-            // Verificar si hemos llegado al estado objetivo
-            if (currentNode.heuristic === 0) {
-                // Reconstruir el camino hacia la solución
-                const solutionPath = [];
-                let current = currentNode;
-                while (current !== null) {
-                    solutionPath.push(current.board);
-                    current = current.parent;
-                }
-                solutionPath.reverse();
-                console.log('Se encontró una solución:');
-                console.log(`Movimientos realizados: ${solutionPath.length - 1}`);
-                for (let i = 1; i < solutionPath.length; i++) {
-                    console.log(`Movimiento ${i}:`);
-                    // Imprimir el tablero en cada paso del camino
-                    for (let row = 0; row < this.size; row++) {
-                        console.log(solutionPath[i]
-                            .slice(row * this.size, (row + 1) * this.size)
-                            .map(cell => `(${cell.x},${cell.y})`)
-                            .join(' '));
-                    }
-                }
-                return;
-            }
-
-            // Marcar el nodo actual como visitado
-            closedSet.add(JSON.stringify(currentNode.board));
-            console.log(closedSet);
-            // Generar movimientos válidos desde el nodo actual
-            const validMoves = this.generateValidMoves(currentNode);
-
-            for (const move of validMoves) {
-                const key = JSON.stringify(move.board);
-                if (!closedSet.has(key)) {
-                    openSet.push(move);
-                }
-            }
+function buscarposicion(newBoard, newX, newY){
+    var i = 0;
+    for (const cell of newBoard){
+        i++;
+        var x = parseInt(cell.dataset.newPositionX);
+        var y = parseInt(cell.dataset.newPositionY);
+        
+        //console.log("x", x, "y", y);
+        if(x == newX && y == newY){
+            return i-1;
         }
-
-        console.log('No se encontró una solución.');
     }
 }
 
-// Event listener para el botón de resolución con A*
+// A* Algorithm
+function solveWithAStar() {
+    let size = parseInt(boardSizeInput.value);
+    let ciclo = 0;
+    // Create the initial puzzle state
+    const initialNode = new PuzzleState(cellsList, 0, calculateHeuristic(cellsList));
+    console.log(initialNode);
+    const openSet = [initialNode];
+    const visited = new Set();
+
+    // Define the heuristic function (Manhattan distance)
+    function calculateHeuristic(board) {
+        let heuristic = 0;
+        // Calculate the Manhattan distance for each til
+        for (let i = 0; i < board.length; i++) {
+            const targetX = i % size;
+            //console.log(targetX);
+            const targetY = Math.floor(i / size);
+            //console.log(targetY);
+            //console.log("posicion i", board[i]);
+            const currentX = board[i].dataset.newPositionX;
+            //console.log("currentx", currentX);
+            const currentY = board[i].dataset.newPositionY;
+            //console.log("currenty", currentY);
+            heuristic += Math.abs(targetX - currentX) + Math.abs(targetY - currentY);
+        }
+        return heuristic;
+    }
+
+    while (ciclo < size*100000 && openSet.length > 0) {
+        console.log("openSet Length", openSet.length);
+        // Select the state with the lowest total cost (f(n)) from the open set
+        
+        openSet.sort((a, b) => a.getTotalCost() - b.getTotalCost());
+        //console.log("openSet", openSet);
+        const currentNode = openSet.shift();
+        //console.log("currentNode", currentNode);
+        // Mark the current state as visited
+        visited.add(JSON.stringify(currentNode.board));
+
+        // Check if the current state is the goal state
+        if (checkPuzzleCompletion2(currentNode.board.length, currentNode.board)) {
+            // Trace back the solution
+            const solutionPath = [];
+            let current = currentNode;
+            while (current !== null) {
+                solutionPath.unshift(current);
+                current = current.parent;
+            }
+
+            // Apply the moves to the game board (you'll need to implement this)
+            applyMovesToGameBoard(solutionPath);
+
+            alert("Puzzle solved!");
+            return;
+        }
+
+        // Generate neighboring states
+        const validMoves = currentNode.getAllValidMoves(currentNode);
+        console.log("validMoves", validMoves);
+        for (const move of validMoves) {
+            console.log("move", move);
+            const newState = new PuzzleState(move, currentNode.moves + 1, calculateHeuristic(move));
+            console.log("newState", newState);
+            newState.parent = currentNode;
+
+            // Check if the state has not been visited
+            if (!visited.has(JSON.stringify(newState))) {
+                //console.log("entra holaaqui");
+                openSet.push(newState);
+            }
+        }
+        ciclo++;
+    }
+
+    alert("No solution found.");
+}
+
+
+// Event listener for the "Solve with A*" button
 aEstrellaButton.addEventListener('click', () => {
-    const aStarSolver = new AStarSolver(cellObjets, emptyCell);
-    aStarSolver.solve();
+    console.log("celllits", cellsList);
+    solveWithAStar();
 });
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Algoritmo backtracking
+//***********************************************************************************************
+class BackTracking {
+
+    constructor( board, cellObjects ) {
+        this.moves = []
+        this.updateBoardState(board, cellObjects)
+        this.setNewCords()
+    }
+ 
+    updateBoardState(newBoard, cellObjects){
+        this.board = newBoard;
+        this.cellObjects = cellObjects // Corregido aquí
+        this.size = Math.sqrt(this.board.length);
+    }
+
+    setNewCords() {
+        let matriz = []
+        //La raiz para hacerlo por filas y columnas
+        for (let i = 0; i < Math.sqrt(this.board.length); i++) {
+            const subarray = this.board.slice(i * Math.sqrt(this.board.length), (i + 1) * Math.sqrt(this.board.length));
+            matriz.push(subarray);
+        }
+        //Esto es para asignar como propiedad, las coordenadas originales en que estaba
+        //Asi tenemos las coordenadas actuales y las que queremos llegar
+        for(let i = 0; i < this.cellObjects.length; i++){
+            for(let j = 0; j < matriz.length; j++){
+                for(let k = 0; k < matriz[j].length; k++){
+                    if (this.cellObjects[i].cell == matriz[j][k]) { // Corregido aquí
+                        this.cellObjects[i].targetX = k // Corregido aquí
+                        this.cellObjects[i].targetY = j // Corregido aquí
+                    }
+                }
+            }
+            
+        }
+        //Para declarar nuestra celda vacia como propiedad de la clase
+        this.setEmptyCell()
+    }
+
+    //Para guardar como propiedad la celda vacia
+    setEmptyCell() {
+        for(let i = 0; i < this.cellObjects.length; i++){
+            if (this.cellObjects[i].empty) { // Corregido aquí
+                this.emptyCell = this.cellObjects[i] // Corregido aquí
+            }
+        }
+    }
+
+    //Para obtener el objeto de cada celda
+    getObjectByCell(cell) {
+        for(let i = 0; i < this.cellObjects.length; i++){
+            if (this.cellObjects[i].cell == cell) { // Corregido aquí
+                return this.cellObjects[i] // Corregido aquí
+            }
+        }
+    }
+ 
+    verifyValidMove( cellObject ) {
+        const dx = Math.abs(cellObject.x - this.emptyCell.x)
+        const dy = Math.abs(cellObject.y - this.emptyCell.y)
+        return ((dx === 1 && dy === 0) || (dx === 0 && dy === 1))
+    }
+
+    cleanList(cellObject) {
+        const auxList = []
+        for(let i = 0; i < this.cellObjects.length; i++) {
+            if (cellObject.cell == this.cellObjects[i].cell) {
+                auxList.push(cellObject)
+            } else if (this.cellObjects[i].empty) {
+                auxList.push(this.emptyCell)
+            } else {
+                auxList.push(this.cellObjects[i])
+            }
+        }
+        this.cellObjects = auxList
+    }
+
+    makeMove(cellObject) {
+        for(let i = 0; i < this.cellObjects.length; i++) {
+            if (cellObject == this.cellObjects[i]) {
+                let auxEmptyCell = this.emptyCell
+                let auxCell = cellObject
+                this.emptyCell.x = auxCell.x
+                this.emptyCell.y = auxCell.y
+                let newCellObject = {
+                    cell:cellObject.cell,
+                    targetX:cellObject.targetX,
+                    targetY:cellObject.targetY,
+                    x:auxEmptyCell.x,
+                    y:auxEmptyCell.y
+                }
+                this.cleanList(newCellObject)
+            }
+        }
+    }
+ 
+    getAllValidMoves() {
+        //Se limpia la lista
+        this.validMoves = []
+        for ( let i = 0; i < this.cellObjects.length; i++ ) {
+            if ( this.verifyValidMove(this.cellObjects[i])) {
+                console.log("posible", this.cellObjects[i])
+                //Se agregan las casillas que se pueden mover
+                this.validMoves.push(this.cellObjects[i])
+            }
+        }
+        return this.validMoves
+    }
+
+    verifyWin() {
+        for(let i = 0; i < this.cellObjects.length; i++) {
+            //Si la posicion actual de las casillas con foto es la misma que el target
+            let condition = (this.cellObjects[i].x == this.cellObjects[i].targetX) && (this.cellObjects[i].y == this.cellObjects[i].targetY) && (!this.cellObjects[i].empty)
+            if (!condition) {
+                //Si alguna no lo cumple retorna false
+                return false
+            }
+        }
+        return true
+    }
+ 
+    solve(validMoves){
+        //Encontramos una solución
+        if ( this.verifyWin()) {
+            //Hace los movimientos en el tablero cada medio segundo para que se note
+            for (let i = 0; i < this.moves.length; i++) {
+                setTimeout(() => {this.moves[i].cell.click()}, 500)
+            }
+            alert("HAZ COMPLETADO EL JUEGO")
+            return true;
+        }
+        for (let i = 0; i < validMoves.length; i++ ) {
+            console.log("Mueve", validMoves[i])
+            //Se cambia la posicion de forma logica
+            this.makeMove(validMoves[i])
+            //Se agrega a la pila de movimientos
+            this.moves.push(validMoves[i])
+            //Se actualiza el estado
+            let validMovesUpdate = this.getAllValidMoves()
+            console.log("Validos", validMovesUpdate)
+            //Llama recursivamente con el nuevo estado, en caso de estar resuelto, nos retornara true
+            if ( this.solve(validMovesUpdate) ) {
+                return
+            }
+            //Se devuelve este movimiento
+            //Se saca de la lista de movimientos
+            console.log("Devuelve", validMoves[i])
+            this.moves.pop()
+        }
+    }
+ }
+
+backTrackingButton.addEventListener('click', () => {
+    backTrackingAlgorithm = new BackTracking(orderList, cellObjets)
+    //Se llama la solucion
+    backTrackingAlgorithm.solve( backTrackingAlgorithm.getAllValidMoves() )
+})
+
+
+
