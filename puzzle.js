@@ -1,5 +1,6 @@
 const boardSizeInput = document.getElementById('board-size');
 const startButton = document.getElementById('start-button');
+const aEstrellaButton = document.getElementById('solve-buttonA');
 const board = document.getElementById('board');
 const imageOptions = document.getElementById('image-options');
 const movements = document.getElementById('movements');
@@ -25,7 +26,6 @@ let startState;
 let goalState;
 let temp1;
 let temp2;
-
 
 startButton.addEventListener('click', () => {
     const size = parseInt(boardSizeInput.value);
@@ -104,7 +104,7 @@ function createPuzzleBoard(size, selectedImage) {
                 board.appendChild(cell);
 
                 if (temp1.length<size){
-                    temp1.push(cell.dataset.value);
+                    temp1.push(parseInt(cell.dataset.value));
                 }
             }
             if (temp1.length=size){
@@ -113,17 +113,18 @@ function createPuzzleBoard(size, selectedImage) {
             }
 
         }
-        console.log(goalState);
         shuffleArray(cellsList, size); // Reorganizar las celdas aleatoriamente
+        console.log("goal", goalState);
     };
 }
 
 function shuffleArray(array, size) {
-    temp2=[];
+    
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
 
+        //console.log(array[i]);
         // Actualizar las posiciones de las celdas en el dataset y el estilo
         if (array[i].dataset.value != 0 && array[j].dataset.value != 0){
             const tempX = array[i].dataset.x;
@@ -140,30 +141,19 @@ function shuffleArray(array, size) {
             
         }
     }
-/*
-    for (let ypos = 0; ypos < size; ypos++) {
-        for (let xpos = 0; xpos < size; xpos++) {
-            
-            if(cell.dataset.newPositionX==xpos && cell.dataset.newPositionY==ypos){
-                if (temp2.length<size){
-                    temp2.push(board[x][y].dataset.value);
-                    temp2.push(array[i].dataset.value);
-                }
-            }
-
-
-            if (temp2.length<size){
-                temp2.push(board[x][y].dataset.value);
-                temp2.push(array[i].dataset.value);
-            }
-        }
+    for (let i = 0; i < size; i++) {
+        const temp2 = new Array(size).fill(0);
+        startState.push(temp2);
     }
-    
-        if (temp2.length=size){
-            startState.push(temp2);
-            temp2 = [];
-        }*/
-    //console.log(startState);
+
+    for (let i = 0; i < cellsList.length; i++) {
+        const cell = cellsList[i];
+        const valorP = parseInt(cell.dataset.value);
+        const xP = parseInt(cell.dataset.newPositionX);
+        const yP = parseInt(cell.dataset.newPositionY);
+        startState[yP][xP] = valorP;
+    }
+    console.log("start", startState)
 }
 
 function deepCopy(obj) {
@@ -280,12 +270,13 @@ function checkPuzzleCompletion(size) {
 // Event listener for the "Solve with A*" button
 aEstrellaButton.addEventListener('click', () => {
     console.log("celllits", cellsList);
-    //const moves = solvePuzzle(startState, goalState);
+    const moves = solvePuzzle(startState, goalState);
+    console.log(moves);
 });
 
 
 /////////////////////////////////////////////////////////////////////////////
-/*
+
 
 class PuzzleNode {
     constructor(state, parent, move, depth, heuristic) {
@@ -360,6 +351,7 @@ class PuzzleNode {
     const n = startState.length;
     const openSet = [];
     const closedSet = new Set();
+    //let i=0;
   
     const startNode = new PuzzleNode(startState, null, null, 0,
       calculateManhattanDistance(startState, goalState));
@@ -368,7 +360,10 @@ class PuzzleNode {
     while (openSet.length > 0) {
       const currentNode = openSet.shift();
       closedSet.add(JSON.stringify(currentNode.state));
-  
+      
+      //console.log(i);
+      //i++
+      
       if (JSON.stringify(currentNode.state) === JSON.stringify(goalState)) {
         return constructPath(currentNode);
       }
@@ -402,7 +397,7 @@ class PuzzleNode {
   
     return path;
   }
-  
+  /*
   async function displayBoard(board, elementId) {
     const table = document.getElementById(elementId);
     table.innerHTML = '';
@@ -422,7 +417,7 @@ class PuzzleNode {
     // Add a slight delay to visually show each move
     await new Promise(resolve => setTimeout(resolve, 500));
   }
-  
+  */
   async function performMovesVisually(moves) {
     let currentIndex = 0;
   
@@ -438,7 +433,7 @@ class PuzzleNode {
   
     await performNextMove();
   }
-  
+  /*
   // Define your puzzle state and goal state here
   const startState = [[4, 6, 3], [1, 5, 0], [2, 7, 8]];
   const goalState = [[1, 2, 3], [4, 5, 6], [7, 8, 0]];
