@@ -1,6 +1,7 @@
 const boardSizeInput = document.getElementById('board-size');
 const startButton = document.getElementById('start-button');
 const aEstrellaButton = document.getElementById('solve-buttonA');
+const backtrackingButton = document.getElementById('solve-buttonB');
 const board = document.getElementById('board');
 const imageOptions = document.getElementById('image-options');
 const movements = document.getElementById('movements');
@@ -120,40 +121,46 @@ function createPuzzleBoard(size, selectedImage) {
 
 function shuffleArray(array, size) {
     
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+  for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
 
-        //console.log(array[i]);
-        // Actualizar las posiciones de las celdas en el dataset y el estilo
-        if (array[i].dataset.value != 0 && array[j].dataset.value != 0){
-            const tempX = array[i].dataset.x;
-            const tempY = array[i].dataset.y;
-            const tempV = array[i].dataset.value;
-            array[i].dataset.x = array[j].dataset.x;
-            array[i].dataset.y = array[j].dataset.y;
-            array[i].dataset.value = array[j].dataset.value;
-            array[i].style.backgroundPosition = `-${(imageWidth / size) * array[j].dataset.x}px -${(imageHeight / size) * array[j].dataset.y}px`;
-            array[j].dataset.x = tempX;
-            array[j].dataset.y = tempY;
-            array[j].dataset.value = tempV;
-            array[j].style.backgroundPosition = `-${(imageWidth / size) * tempX}px -${(imageHeight / size) * tempY}px`;
-            
-        }
-    }
-    for (let i = 0; i < size; i++) {
-        const temp2 = new Array(size).fill(0);
-        startState.push(temp2);
-    }
+      //console.log(array[i]);
+      // Actualizar las posiciones de las celdas en el dataset y el estilo
+      if (array[i].dataset.value != 0 && array[j].dataset.value != 0){
+          const tempX = array[i].dataset.x;
+          const tempY = array[i].dataset.y;
+          const tempV = array[i].dataset.value;
+          array[i].dataset.x = array[j].dataset.x;
+          array[i].dataset.y = array[j].dataset.y;
+          array[i].dataset.value = array[j].dataset.value;
+          array[i].style.backgroundPosition = `-${(imageWidth / size) * array[j].dataset.x}px -${(imageHeight / size) * array[j].dataset.y}px`;
+          array[j].dataset.x = tempX;
+          array[j].dataset.y = tempY;
+          array[j].dataset.value = tempV;
+          array[j].style.backgroundPosition = `-${(imageWidth / size) * tempX}px -${(imageHeight / size) * tempY}px`;
+          
+      }
+  }
+  for (let i = 0; i < size; i++) {
+      const temp2 = new Array(size).fill(0);
+      startState.push(temp2);
+  }
 
-    for (let i = 0; i < cellsList.length; i++) {
-        const cell = cellsList[i];
-        const valorP = parseInt(cell.dataset.value);
-        const xP = parseInt(cell.dataset.newPositionX);
-        const yP = parseInt(cell.dataset.newPositionY);
-        startState[yP][xP] = valorP;
+  for (let i = 0; i < cellsList.length; i++) {
+      const cell = cellsList[i];
+      const valorP = parseInt(cell.dataset.value);
+      const xP = parseInt(cell.dataset.newPositionX);
+      const yP = parseInt(cell.dataset.newPositionY);
+      startState[yP][xP] = valorP;
+  }
+  console.log("start", startState);
+  const isSolvableResult = isSolvable(startState);
+    if (isSolvableResult) {
+    window.alert("El puzzle es soluble.");
+    } else {
+    window.alert("El puzzle no es soluble.");
     }
-    console.log("start", startState)
 }
 
 function deepCopy(obj) {
@@ -268,197 +275,216 @@ function checkPuzzleCompletion(size) {
 }
 
 // Event listener for the "Solve with A*" button
-aEstrellaButton.addEventListener('click', () => {
-    console.log("celllits", cellsList);
-    const moves = solvePuzzle(startState, goalState);
-    console.log(moves);
+aEstrellaButton.addEventListener('click', async () => {
+  const movesToSolve = solvePuzzle(startState, goalState);
+
+  if (movesToSolve === -1) {
+      console.log('No solution found.');
+  } else {
+    console.log('Number of moves to solve the puzzle:', movesToSolve);
+    movements.textContent = movesToSolve; 
+    //await performMovesVisually(movesToSolve);
+    console.log('Puzzle solved!');
+  }
 });
 
+// Event listener for the "Solve with backtracking" button
+bactrackingButton.addEventListener('click', async () => {
+  /*const movesToSolve = solvePuzzle(startState, goalState);
+
+  if (movesToSolve === -1) {
+      console.log('No solution found.');
+  } else {
+    console.log('Number of moves to solve the puzzle:', movesToSolve);
+    movements.textContent = movesToSolve; 
+    //await performMovesVisually(movesToSolve);
+    console.log('Puzzle solved!');
+  }*/
+});
 
 /////////////////////////////////////////////////////////////////////////////
 
+class PuzzleState {
+  constructor(board, size, moves, heuristic) {
+    this.board = board;
+    this.size = size;
+    this.moves = moves;
+    this.heuristic = heuristic;
+  }
 
-class PuzzleNode {
-    constructor(state, parent, move, depth, heuristic) {
-      this.state = state;  // Representación del estado del puzzle
-      this.parent = parent;  // Nodo padre
-      this.move = move;  // Movimiento que llevó a este estado
-      this.depth = depth;  // Profundidad en el árbol
-      this.heuristic = heuristic;  // Valor heurístico
+  getScore() {
+    return this.moves + this.heuristic;
+  }
+}
+
+function getManhattanDistance(board, n) {
+  let distance = 0;
+
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const value = board[i][j];
+      if (value !== 0) {
+        const goalX = Math.floor((value - 1) / n);
+        const goalY = (value - 1) % n;
+        distance += Math.abs(i - goalX) + Math.abs(j - goalY);
+      }
     }
   }
+
+  return distance;
+}
+
+function getPossibleMoves(x, y, n) {
+  const moves = [];
+  if (x > 0) moves.push({ x: x - 1, y });
+  if (x < n - 1) moves.push({ x: x + 1, y });
+  if (y > 0) moves.push({ x, y: y - 1 });
+  if (y < n - 1) moves.push({ x, y: y + 1 });
+
+  return moves;
+}
+
+function swap(board, x1, y1, x2, y2) {
+  const temp = board[x1][y1];
+  board[x1][y1] = board[x2][y2];
+  board[x2][y2] = temp;
+}
+
+function solvePuzzle(initialState, goalState) {
+  let i=0;
+
+  const n = initialState.length;
   
-  // Función de heurística (en este caso, distancia Manhattan)
-  function calculateManhattanDistance(currentState, goalState) {
-    let distance = 0;
-    const n = currentState.length;
+
+  const startNode = new PuzzleState(
+    initialState,
+    n,
+    0,
+    getManhattanDistance(initialState, n)
+  );
   
+  const openSet = new Set();
+  const closedSet = new Set();
+  openSet.add(startNode);
+
+  while (openSet.size > 0) {
+    i++;
+    console.log(i);
+    let currentState = null;
+
+    for (const state of openSet) {
+      if (!currentState || state.getScore() < currentState.getScore()) {
+        currentState = state;
+      }
+    }
+
+    openSet.delete(currentState);
+    closedSet.add(JSON.stringify(currentState.board));
+
+    if (JSON.stringify(currentState.board) === JSON.stringify(goalState)) {
+      return currentState.moves;
+    }
+
+    const zeroPos = currentState.board.reduce(
+      (acc, row, i) =>
+        row.indexOf(0) !== -1 ? { x: i, y: row.indexOf(0) } : acc,
+      {}
+    );
+
+    const possibleMoves = getPossibleMoves(zeroPos.x, zeroPos.y, n);
+
+    for (const move of possibleMoves) {
+      const newBoard = currentState.board.map(row => [...row]);
+      swap(newBoard, zeroPos.x, zeroPos.y, move.x, move.y);
+
+      const newState = new PuzzleState(
+        newBoard,
+        n,
+        currentState.moves + 1,
+        getManhattanDistance(newBoard, n)
+      );
+
+      if (!closedSet.has(JSON.stringify(newState.board))) {
+        openSet.add(newState);
+      }
+    }
+  }
+
+  return -1; // No solution found
+}
+
+
+  function countInversions(matrix) {
+    const flattenedMatrix = matrix.flat().filter(num => num !== 0);
+    let inversions = 0;
+
+    for (let i = 0; i < flattenedMatrix.length; i++) {
+      for (let j = i + 1; j < flattenedMatrix.length; j++) {
+        if (flattenedMatrix[i] > flattenedMatrix[j]) {
+          inversions++;
+        }
+      }
+    }
+
+    return inversions;
+  }
+
+  function isSolvable(matrix) {
+    const n = matrix.length;
+    const inversions = countInversions(matrix);
+
+    // Encontrar la fila que contiene el espacio en blanco
+    let blankTileRow;
     for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
-        if (currentState[i][j] !== 0) {
-          const goalPosition = findTilePosition(goalState, currentState[i][j]);
-          distance += Math.abs(i - goalPosition[0]) + Math.abs(j - goalPosition[1]);
-        }
+      if (matrix[i].includes(0)) {
+        blankTileRow = n - i;
+        break;
       }
     }
-  
-    return distance;
-  }
-  
-  function findTilePosition(state, tile) {
-    const n = state.length;
-  
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
-        if (state[i][j] === tile) {
-          return [i, j];
-        }
-      }
-    }
-  
-    return null;
-  }
-  
-  // Función para generar sucesores válidos
-  function generateSuccessors(node, n) {
-    const successors = [];
-    const moves = [[-1, 0], [1, 0], [0, -1], [0, 1]];  // Movimientos arriba, abajo, izquierda, derecha
-    const emptyTilePos = findTilePosition(node.state, 0);
-  
-    for (const move of moves) {
-      const newRow = emptyTilePos[0] + move[0];
-      const newCol = emptyTilePos[1] + move[1];
-  
-      if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < n) {
-        const newState = node.state.map(row => row.slice());
-        [newState[emptyTilePos[0]][emptyTilePos[1]], newState[newRow][newCol]] =
-          [newState[newRow][newCol], newState[emptyTilePos[0]][emptyTilePos[1]]];
-          
-        // Validar que la pieza que se está moviendo sea adyacente al 0
-        if ((Math.abs(emptyTilePos[0] - newRow) + Math.abs(emptyTilePos[1] - newCol)) === 1) {
-          successors.push(new PuzzleNode(newState, node, [newRow, newCol], node.depth + 1,
-            calculateManhattanDistance(newState, goalState)));
-        }
-      }
-    }
-  
-    return successors;
-  }
-  
-  
-  // Función para resolver el puzzle usando A*
-  function solvePuzzle(startState, goalState) {
-    const n = startState.length;
-    const openSet = [];
-    const closedSet = new Set();
-    //let i=0;
-  
-    const startNode = new PuzzleNode(startState, null, null, 0,
-      calculateManhattanDistance(startState, goalState));
-    openSet.push(startNode);
-  
-    while (openSet.length > 0) {
-      const currentNode = openSet.shift();
-      closedSet.add(JSON.stringify(currentNode.state));
-      
-      //console.log(i);
-      //i++
-      
-      if (JSON.stringify(currentNode.state) === JSON.stringify(goalState)) {
-        return constructPath(currentNode);
-      }
-  
-      const successors = generateSuccessors(currentNode, n);
-  
-      for (const successor of successors) {
-        if (!closedSet.has(JSON.stringify(successor.state))) {
-          openSet.push(successor);
-        }
-      }
-  
-      openSet.sort((a, b) =>
-        (a.depth + a.heuristic) - (b.depth + b.heuristic));
-    }
-  
-    return null;  // No se encontró solución
-  }
-  
-  // Función para construir el camino desde el nodo objetivo al nodo inicial
-  function constructPath(node) {
-    const path = [];
-    let currentNode = node;
-  
-    while (currentNode !== null) {
-      if (currentNode.move) {
-        path.unshift(currentNode.move);
-      }
-      currentNode = currentNode.parent;
-    }
-  
-    return path;
-  }
-  /*
-  async function displayBoard(board, elementId) {
-    const table = document.getElementById(elementId);
-    table.innerHTML = '';
-  
-    for (let i = 0; i < board.length; i++) {
-      const row = document.createElement('tr');
-  
-      for (let j = 0; j < board[i].length; j++) {
-        const cell = document.createElement('td');
-        cell.textContent = board[i][j];
-        row.appendChild(cell);
-      }
-  
-      table.appendChild(row);
-    }
-  
-    // Add a slight delay to visually show each move
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  */
-  async function performMovesVisually(moves) {
-    let currentIndex = 0;
-  
-    async function performNextMove() {
-      if (currentIndex < moves.length) {
-        const [row, col] = moves[currentIndex];
-        [startState[row][col], startState[0][0]] = [startState[0][0], startState[row][col]];
-        await displayBoard(startState, 'board'); // Display the updated board
-        currentIndex++;
-        setTimeout(performNextMove, 1000); // Adjust the interval as needed
-      }
-    }
-  
-    await performNextMove();
-  }
-  /*
-  // Define your puzzle state and goal state here
-  const startState = [[4, 6, 3], [1, 5, 0], [2, 7, 8]];
-  const goalState = [[1, 2, 3], [4, 5, 6], [7, 8, 0]];
-  displayBoard(startState, 'initialStateTable');
-  
-  // Call the function to solve and visualize the puzzle
-  const moves = solvePuzzle(startState, goalState);
-  console.log(moves);
-  performMovesVisually(moves);
 
-  ///////////////////////////////////////////////////
-
-  function convertStateToBoard(state) {
-    const size = state.length;
-    const board = [];
-  
-    for (let i = 0; i < size; i++) {
-      const row = [];
-      for (let j = 0; j < size; j++) {
-        row.push(state[i][j]);
-      }
-      board.push(row);
+    // Para un puzzle de tamaño impar, debe haber un número par de inversiones
+    if (n % 2 === 1) {
+      return inversions % 2 === 0;
     }
-  
-    return board;
+    // Para un puzzle de tamaño par, debe haber un número par de inversiones y una fila par desde abajo para el espacio en blanco
+    else {
+      return (inversions % 2 === 0 && blankTileRow % 2 === 1) || (inversions % 2 === 1 && blankTileRow % 2 === 0);
+    }
   }
 
-  */
+async function performMovesVisually(moves) {
+  const delay = 1000; // Delay between moves (in milliseconds)
+
+  for (const move of moves) {
+      const [row, col] = move;
+      [startState[row][col], startState[emptyCell.newPositionY][emptyCell.newPositionX]] =
+        [startState[emptyCell.newPositionY][emptyCell.newPositionX], startState[row][col]];
+
+        // Update the puzzle board visually
+      updateBoardVisually();
+
+        // Wait for the specified delay
+      await new Promise(resolve => setTimeout(resolve, delay));
+  }
+}
+
+function updateBoardVisually() {
+    cellsList.forEach((cell, index) => {
+        const x = cell.dataset.newPositionX;
+        const y = cell.dataset.newPositionY;
+        const value = startState[y][x];
+
+        if (value === 0) {
+            cell.style.backgroundColor = 'grey';
+        } else {
+            cell.style.backgroundColor = 'transparent';
+            const offsetX = (imageWidth / startState.length) * x;
+            const offsetY = (imageHeight / startState.length) * y;
+            cell.style.backgroundPosition = `-${offsetX}px -${offsetY}px`;
+        }
+    });
+  }
+
+
+
+  

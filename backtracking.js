@@ -1,123 +1,90 @@
-function solvePuzzle(size) {
-    const initialBoard = getCurrentBoardState(size);
-    const solvedBoard = getGoalBoard(size);
+function solveSlidePuzzle(initialMatrix, goalMatrix) {
+  const n = initialMatrix.length;
+  const moves = [];
 
-    const solve = (board, depth) => {
-        if (depth === 0) {
-            return board.toString() === solvedBoard.toString() ? [board] : [];
+  // Función auxiliar para intercambiar elementos en la matriz
+  function swap(matrix, i1, j1, i2, j2) {
+    const temp = matrix[i1][j1];
+    matrix[i1][j1] = matrix[i2][j2];
+    matrix[i2][j2] = temp;
+  }
+
+  // Función para clonar una matriz
+  function cloneMatrix(matrix) {
+    return matrix.map(row => [...row]);
+  }
+
+  // Función para verificar si la matriz actual es igual a la meta
+  function isGoal(matrix) {
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (matrix[i][j] !== goalMatrix[i][j]) {
+          return false;
         }
-
-        const emptyCell = findEmptyCell(board, size);
-        const moves = getPossibleMoves(emptyCell, size);
-
-        for (const move of moves) {
-            const newBoard = makeMove(board, emptyCell, move);
-            const solution = solve(newBoard, depth - 1);
-
-            if (solution.length > 0) {
-                return [board, ...solution];
-            }
-        }
-
-        return [];
-    };
-
-    const solutionPath = solve(initialBoard, size * size * size);
-    
-    if (solutionPath.length === 0) {
-        console.log('No se encontró una solución.');
-    } else {
-        console.log('Se encontró una solución:');
-        for (let i = 0; i < solutionPath.length; i++) {
-            console.log(`Movimiento ${i + 1}:`);
-            printBoard(solutionPath[i], size);
-        }
+      }
     }
-}
+    return true;
+  }
 
-// Función para obtener el estado actual del tablero
-function getCurrentBoardState(size) {
-    const boardState = Array.from({ length: size }, () =>
-        Array.from({ length: size }, () => ({ x: 0, y: 0 }))
-    );
-
-    cellsList.forEach((cell) => {
-        const x = parseInt(cell.dataset.x);
-        const y = parseInt(cell.dataset.y);
-        boardState[x][y] = { x, y };
-    });
-
-    return boardState;
-}
-
-// Función para obtener el estado objetivo del tablero
-function getGoalBoard(size) {
-    const goalBoard = Array.from({ length: size }, () =>
-        Array.from({ length: size }, () => ({ x: 0, y: 0 }))
-    );
-
-    for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-            goalBoard[x][y] = { x, y };
-        }
+  // Función de backtracking para resolver el rompecabezas
+  function backtrack(matrix, i, j, depth) {
+    if (depth === 0) {
+      return false;
     }
 
-    return goalBoard;
-}
-
-// Función para encontrar la celda vacía en el tablero
-function findEmptyCell(board, size) {
-    for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-            if (!board[x][y]) {
-                return { x, y };
-            }
-        }
+    if (isGoal(matrix)) {
+      return true;
     }
-}
 
-// Función para obtener los movimientos posibles desde una celda
-function getPossibleMoves(cell, size) {
-    const { x, y } = cell;
-    const moves = [];
+    const directions = [
+      { dx: 0, dy: 1, move: 'right' },
+      { dx: 0, dy: -1, move: 'left' },
+      { dx: 1, dy: 0, move: 'down' },
+      { dx: -1, dy: 0, move: 'up' }
+    ];
 
-    if (x > 0) moves.push({ x: x - 1, y });
-    if (x < size - 1) moves.push({ x: x + 1, y });
-    if (y > 0) moves.push({ x, y: y - 1 });
-    if (y < size - 1) moves.push({ x, y: y + 1 });
+    for (const direction of directions) {
+      const newI = i + direction.dx;
+      const newJ = j + direction.dy;
 
+      if (newI >= 0 && newI < n && newJ >= 0 && newJ < n) {
+        swap(matrix, i, j, newI, newJ);
+        moves.push(direction.move);
+
+        if (backtrack(cloneMatrix(matrix), newI, newJ, depth - 1)) {
+          return true;
+        }
+
+        // Undo the move
+        swap(matrix, i, j, newI, newJ);
+        moves.pop();
+      }
+    }
+
+    return false;
+  }
+
+  // Llamada inicial a la función de backtracking
+  const maxDepth = n * n;  // Profundidad máxima
+  if (backtrack(cloneMatrix(initialMatrix), 0, 0, maxDepth)) {
     return moves;
+  } else {
+    return null; // No se encontró solución
+  }
 }
 
-// Función para realizar un movimiento en el tablero
-function makeMove(board, emptyCell, move) {
-    const newBoard = board.map((row) => [...row]);
-    const { x: emptyX, y: emptyY } = emptyCell;
-    const { x: moveX, y: moveY } = move;
+// Ejemplo de uso
+const initialMatrix = [
+  [1, 2, 3],
+  [4, 0, 5],
+  [6, 7, 8]
+];
 
-    newBoard[emptyX][emptyY] = { ...board[moveX][moveY] };
-    newBoard[moveX][moveY] = null;
+const goalMatrix = [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 0]
+];
 
-    return newBoard;
-}
-
-// Función para imprimir el tablero en la consola
-function printBoard(board, size) {
-    for (let y = 0; y < size; y++) {
-        let row = '';
-        for (let x = 0; x < size; x++) {
-            const cell = board[x][y];
-            row += cell ? `[${cell.x},${cell.y}] ` : '[  ] ';
-        }
-        console.log(row);
-    }
-    console.log('\n');
-}
-
-// Llamar a la función para resolver el rompecabezas
-startButton.addEventListener('click', () => {
-    const size = parseInt(boardSizeInput.value);
-    const selectedImage = imageOptions.value;
-    createPuzzleBoard(size, selectedImage);
-    solvePuzzle(size);
-});
+const solution = solveSlidePuzzle(initialMatrix, goalMatrix);
+console.log('Pasos para resolver el slide puzzle:', solution);
